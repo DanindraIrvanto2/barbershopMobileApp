@@ -13,14 +13,15 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import type { LoginScreenProps } from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 
-export default function LoginScreen() {
-  const { user, login, logout } = useAuth();
-  const [email, setEmail] = useState('admin@hairdept.com');
-  const [password, setPassword] = useState('admin123');
-  const [rememberMe, setRememberMe] = useState(true);
+export default function LoginScreen({ navigation }: LoginScreenProps) {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -36,14 +37,14 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      // 1. Coba request ke API backend asli
+      // 1. Request ke API backend
       const data = await authService.login(inputEmail, inputPassword);
       login(data.user || { id: 1, username: inputEmail, email: inputEmail, role: 'admin' });
-      Alert.alert('Login Berhasil', data.message || 'Selamat datang kembali!');
+      navigation.replace('Orders');
     } catch (err: any) {
       console.log('Login attempt error:', err?.message);
 
-      // 2. Fallback jika server backend lokal belum dinyalakan atau kredensial default admin
+      // 2. Fallback jika server backend lokal belum menyala
       const isDemoUser =
         inputEmail === 'admin' ||
         inputEmail === 'admin@hairdept.com' ||
@@ -62,7 +63,7 @@ export default function LoginScreen() {
           email: inputEmail.includes('@') ? inputEmail : `${inputEmail}@hairdept.com`,
           role: 'admin',
         });
-        Alert.alert('Login Berhasil', `Selamat datang kembali, ${inputEmail}!`);
+        navigation.replace('Orders');
       } else {
         const msg = err.response?.data?.error || 'Email/username atau password salah';
         setErrorMsg(msg);
@@ -70,13 +71,6 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-    setEmail('admin@hairdept.com');
-    setPassword('admin123');
-    setErrorMsg('');
   };
 
   const fillDemoAccount = () => {
@@ -108,130 +102,90 @@ export default function LoginScreen() {
             <Text style={styles.brandTitle}>Hairdept Barbershop.</Text>
           </View>
 
-          {/* Conditional: Form Login vs Akun Sedang Aktif */}
-          {!user ? (
-            <View style={styles.formContainer}>
-              {/* Heading */}
-              <View style={styles.headingBox}>
-                <Text style={styles.mainTitle}>Log in to your account</Text>
-                <Text style={styles.subTitle}>
-                  Enter your email or username and password below to log in
-                </Text>
-              </View>
-
-              {/* Error Message Box */}
-              {errorMsg ? (
-                <View style={styles.errorBanner}>
-                  <Text style={styles.errorIcon}>⚠️</Text>
-                  <Text style={styles.errorText}>{errorMsg}</Text>
-                </View>
-              ) : null}
-
-              {/* Input Fields */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email / Username</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Email"
-                  placeholderTextColor="#94A3B8"
-                  value={email}
-                  onChangeText={(val) => {
-                    setEmail(val);
-                    if (errorMsg) setErrorMsg('');
-                  }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Password</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Password"
-                  placeholderTextColor="#94A3B8"
-                  value={password}
-                  onChangeText={(val) => {
-                    setPassword(val);
-                    if (errorMsg) setErrorMsg('');
-                  }}
-                  secureTextEntry
-                />
-              </View>
-
-              {/* Remember Me Toggle */}
-              <TouchableOpacity
-                style={styles.rememberMeRow}
-                onPress={() => setRememberMe(!rememberMe)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
-                  {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                <Text style={styles.rememberMeText}>Remember me</Text>
-              </TouchableOpacity>
-
-              {/* Submit Button */}
-              <TouchableOpacity
-                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-                onPress={handleLogin}
-                activeOpacity={0.85}
-                disabled={loading}
-              >
-                <Text style={styles.submitButtonText}>
-                  {loading ? 'Logging in...' : 'Log in'}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Quick Fill Demo */}
-              <TouchableOpacity
-                style={styles.quickFillBtn}
-                onPress={fillDemoAccount}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.quickFillText}>
-                  💡 Akun Bawaan: admin@hairdept.com / admin123
-                </Text>
-              </TouchableOpacity>
+          <View style={styles.formContainer}>
+            {/* Heading */}
+            <View style={styles.headingBox}>
+              <Text style={styles.mainTitle}>Log in to your account</Text>
+              <Text style={styles.subTitle}>
+                Enter your email or username and password below to log in
+              </Text>
             </View>
-          ) : (
-            <View style={styles.activeContainer}>
-              <View style={styles.activeCard}>
-                <View style={styles.activeBadge}>
-                  <Text style={styles.activeBadgeText}>LOGGED IN</Text>
-                </View>
-                <Text style={styles.activeTitle}>Akun Kasir Sedang Aktif</Text>
-                <Text style={styles.activeSubtitle}>
-                  Selamat datang kembali di Hairdept Barbershop!
-                </Text>
 
-                <View style={styles.profileBox}>
-                  <View style={styles.profileRow}>
-                    <Text style={styles.profileLabel}>Username</Text>
-                    <Text style={styles.profileValue}>{user.username}</Text>
-                  </View>
-                  <View style={styles.profileDivider} />
-                  <View style={styles.profileRow}>
-                    <Text style={styles.profileLabel}>Email</Text>
-                    <Text style={styles.profileValue}>{user.email}</Text>
-                  </View>
-                  <View style={styles.profileDivider} />
-                  <View style={styles.profileRow}>
-                    <Text style={styles.profileLabel}>Role</Text>
-                    <Text style={styles.profileRole}>{user.role || 'Admin'}</Text>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.logoutButton}
-                  onPress={handleLogout}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.logoutButtonText}>Log out dari Akun</Text>
-                </TouchableOpacity>
+            {/* Error Message Box */}
+            {errorMsg ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorIcon}>⚠️</Text>
+                <Text style={styles.errorText}>{errorMsg}</Text>
               </View>
+            ) : null}
+
+            {/* Input Fields */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email / Username</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Email"
+                placeholderTextColor="#94A3B8"
+                value={email}
+                onChangeText={(val) => {
+                  setEmail(val);
+                  if (errorMsg) setErrorMsg('');
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
             </View>
-          )}
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Password"
+                placeholderTextColor="#94A3B8"
+                value={password}
+                onChangeText={(val) => {
+                  setPassword(val);
+                  if (errorMsg) setErrorMsg('');
+                }}
+                secureTextEntry
+              />
+            </View>
+
+            {/* Remember Me Toggle */}
+            <TouchableOpacity
+              style={styles.rememberMeRow}
+              onPress={() => setRememberMe(!rememberMe)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
+                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.rememberMeText}>Remember me</Text>
+            </TouchableOpacity>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              onPress={handleLogin}
+              activeOpacity={0.85}
+              disabled={loading}
+            >
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Logging in...' : 'Log in'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Quick Fill Demo */}
+            <TouchableOpacity
+              style={styles.quickFillBtn}
+              onPress={fillDemoAccount}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.quickFillText}>
+                💡 Akun Bawaan: admin@hairdept.com / admin123
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Footer Copyright */}
           <View style={styles.footer}>
@@ -412,95 +366,6 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 12,
     fontWeight: '600',
-  },
-  activeContainer: {
-    marginVertical: 'auto',
-    paddingVertical: 20,
-    width: '100%',
-  },
-  activeCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-  },
-  activeBadge: {
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 999,
-    marginBottom: 12,
-  },
-  activeBadgeText: {
-    color: '#15803D',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  activeTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 4,
-  },
-  activeSubtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  profileBox: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 16,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 20,
-  },
-  profileRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  profileLabel: {
-    color: '#64748B',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  profileValue: {
-    color: '#0F172A',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  profileRole: {
-    color: '#2563EB',
-    fontSize: 12,
-    fontWeight: '800',
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  profileDivider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 6,
-  },
-  logoutButton: {
-    backgroundColor: '#EF4444',
-    paddingVertical: 12,
-    borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
   },
   footer: {
     alignItems: 'center',

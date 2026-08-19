@@ -2,13 +2,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
   Login: undefined;
-  [key: string]: any;
+  Orders: undefined;
 };
 
 export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
+export type OrdersScreenProps = NativeStackScreenProps<RootStackParamList, 'Orders'>;
 
-// Fallback compatibility types for cached editor tabs
-export type OrdersScreenProps = any;
+// Fallback compatibility types
 export type NewOrderScreenProps = any;
 export type NewOrdersScreenProps = any;
 export type CustomerSelectionScreenProps = any;
