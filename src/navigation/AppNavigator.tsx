@@ -4,14 +4,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
 
 import LoginScreen from '../screens/LoginScreen';
-import OrdersScreen from '../screens/OrdersScreen';
-import NewOrderScreen from '../screens/NewOrderScreen';
-import CustomerSelectionScreen from '../screens/CustomerSelectionScreen';
-import KapsterSelectionScreen from '../screens/KapsterSelectionScreen';
-import ServiceSelectionScreen from '../screens/ServiceSelectionScreen';
-import OrderDetailScreen from '../screens/OrderDetailScreen';
-import PaymentScreen from '../screens/PaymentScreen';
-import InvoicePreviewScreen from '../screens/InvoicePreviewScreen';
+import BottomTabNavigator from './BottomTabNavigator';
+// import OrderDetailScreen from '../screens/OrderDetailScreen';
+// import PaymentScreen from '../screens/PaymentScreen';
+// import InvoicePreviewScreen from '../screens/InvoicePreviewScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -36,7 +32,7 @@ export default function AppNavigator() {
           },
         }}
       >
-        {/* Auth / Login Screen */}
+        {/* Auth Gateway */}
         <Stack.Screen
           name="Login"
           component={LoginScreen}
@@ -45,75 +41,41 @@ export default function AppNavigator() {
           }}
         />
 
-        {/* Main Cashier Orders Screen */}
+        {/* 2 Main Tabs: Antrean (Orders) & Check-in (NewOrders) */}
         <Stack.Screen
-          name="Orders"
-          component={OrdersScreen}
+          name="MainTabs"
+          component={BottomTabNavigator}
           options={{
-            headerShown: false, // Handled custom in screen
+            headerShown: false,
           }}
         />
 
-        {/* New Order Flow */}
-        <Stack.Screen
-          name="CustomerSelection"
-          component={CustomerSelectionScreen}
-          options={{
-            title: '1. Pilih Customer',
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen
-          name="KapsterSelection"
-          component={KapsterSelectionScreen}
-          options={{
-            title: '2. Pilih Kapster',
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen
-          name="ServiceSelection"
-          component={ServiceSelectionScreen}
-          options={{
-            title: '3. Pilih Layanan',
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen
-          name="NewOrder"
-          component={NewOrderScreen}
-          options={{
-            title: 'Konfirmasi Order',
-            headerShown: true,
-          }}
-        />
-
-        {/* Order Detail & Payment Flow */}
-        <Stack.Screen
+        {/* Cashier Order Management & Payment Flow */}
+        {/* <Stack.Screen
           name="OrderDetail"
           component={OrderDetailScreen}
           options={{
             title: 'Detail Order',
             headerShown: true,
           }}
-        />
-        <Stack.Screen
-          name="Payment"
-          component={PaymentScreen}
-          options={{
-            title: 'Kasir Pembayaran',
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen
+        // /> */}
+        // <Stack.Screen
+        //   name="Payment"
+        //   component={PaymentScreen}
+        //   options={{
+        //     title: 'Kasir Pembayaran',
+        //     headerShown: true,
+        //   }}
+        // />
+        {/* <Stack.Screen
           name="InvoicePreview"
-          component={InvoicePreviewScreen}
+          // component={InvoicePreviewScreen}
           options={{
-            title: 'Pratinjau Invoice',
-            headerShown: true,
-          }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+            title: 'Pratinjau Struk',
+        //     headerShown: true, */}
+        {/* //   }}
+        // /> */}
+  //     </Stack.Navigator>
+  //   </NavigationContainer>
+  // );
 }

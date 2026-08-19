@@ -36,7 +36,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         role: 'admin',
       });
       setLoading(false);
-      navigation.replace('Orders');
+      navigation.replace('MainTabs');
     }, 400);
   };
 
