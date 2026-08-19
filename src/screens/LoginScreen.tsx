@@ -40,34 +40,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // 1. Request ke API backend
       const data = await authService.login(inputEmail, inputPassword);
       login(data.user || { id: 1, username: inputEmail, email: inputEmail, role: 'admin' });
-      navigation.replace('Menu');
+      navigation.replace('Orders');
     } catch (err: any) {
       console.log('Login attempt error:', err?.message);
-
-      // 2. Fallback jika server backend lokal belum menyala
-      const isDemoUser =
-        inputEmail === 'admin' ||
-        inputEmail === 'admin@hairdept.com' ||
-        inputEmail === 'kasir' ||
-        inputEmail === 'kasir@hairdept.com';
-
-      const isDemoPassword =
-        inputPassword === 'admin123' ||
-        inputPassword === 'password123' ||
-        inputPassword === 'admin';
-
-      if (isDemoUser && isDemoPassword) {
-        login({
-          id: 1,
-          username: inputEmail.includes('@') ? inputEmail.split('@')[0] : inputEmail,
-          email: inputEmail.includes('@') ? inputEmail : `${inputEmail}@hairdept.com`,
-          role: 'admin',
-        });
-        navigation.replace('Menu');
-      } else {
-        const msg = err.response?.data?.error || 'Email/username atau password salah';
-        setErrorMsg(msg);
-      }
+      const msg = err.response?.data?.error || 'Email/username atau password salah';
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
