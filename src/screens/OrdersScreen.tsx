@@ -1,390 +1,163 @@
-// import React, { useState } from 'react';
-// import {
-//   StyleSheet,
-//   Text,
-//   View,
-//   TouchableOpacity,
-//   ScrollView,
-//   SafeAreaView,
-//   StatusBar,
-// } from 'react-native';
-// import type { OrdersScreenProps } from '../types/navigation';
-// import type { QuickFilterTab } from '../types/order';
-// import { useAuth } from '../context/AuthContext';
+import React from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
+import type { OrdersScreenProps } from '../types/navigation';
+import { useAuth } from '../context/AuthContext';
 
-// export default function OrdersScreen({ navigation }: OrdersScreenProps) {
-//   const { user, logout } = useAuth();
-//   const [activeTab, setActiveTab] = useState<QuickFilterTab>('ALL');
+export default function OrdersScreen({ navigation }: OrdersScreenProps) {
+  const { user, logout } = useAuth();
 
-//   const handleLogout = () => {
-//     logout();
-//     navigation.replace('Login');
-//   };
+  const handleLogout = () => {
+    logout();
+    navigation.replace('Login');
+  };
 
-//   // Sample order items (to be fetched from GET /api/orders on Day 2)
-//   const sampleOrders = [
-//     {
-//       id: 101,
-//       code: '#ORD-101',
-//       customerName: 'Ahmad Faiz',
-//       kapsterName: 'Budi Santoso',
-//       serviceName: 'Haircut + Styling',
-//       time: '09:30',
-//       status: 'WAITING',
-//       price: 'Rp 55.000',
-//       numericPrice: 55000,
-//     },
-//     {
-//       id: 102,
-//       code: '#ORD-102',
-//       customerName: 'Dimas Pratama',
-//       kapsterName: 'Rian Pratama',
-//       serviceName: 'Haircut + Shaving',
-//       time: '10:00',
-//       status: 'IN_SERVICE',
-//       price: 'Rp 75.000',
-//       numericPrice: 75000,
-//     },
-//     {
-//       id: 103,
-//       code: '#ORD-103',
-//       customerName: 'Reza Rahardian',
-//       kapsterName: 'Budi Santoso',
-//       serviceName: 'Premium Cut & Wash',
-//       time: '10:15',
-//       status: 'COMPLETED',
-//       price: 'Rp 90.000',
-//       numericPrice: 90000,
-//     },
-//   ];
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
 
-//   const filteredOrders = sampleOrders.filter((item) => {
-//     if (activeTab === 'ALL') return true;
-//     return item.status === activeTab;
-//   });
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.appSubtitle}>HAIRDEPT BARBERSHOP</Text>
+          <Text style={styles.appTitle}>Dashboard Kasir</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          onPress={handleLogout}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.logoutBtnText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
 
-//   const getStatusBadge = (status: string) => {
-//     switch (status) {
-//       case 'WAITING':
-//         return { bg: '#FEF3C7', text: '#92400E', label: 'Waiting' };
-//       case 'IN_SERVICE':
-//         return { bg: '#DBEAFE', text: '#1E40AF', label: 'In Service' };
-//       case 'COMPLETED':
-//         return { bg: '#D1FAE5', text: '#065F46', label: 'Completed (Unpaid)' };
-//       default:
-//         return { bg: '#334155', text: '#CBD5E1', label: status };
-//     }
-//   };
+      {/* Content Body */}
+      <View style={styles.content}>
+        <View style={styles.welcomeCard}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarText}>
+              {user?.username ? user.username[0].toUpperCase() : 'K'}
+            </Text>
+          </View>
+          <Text style={styles.welcomeTitle}>
+            Selamat Datang, {user?.username || 'Kasir'}! 👋
+          </Text>
+          <Text style={styles.welcomeSubtitle}>
+            Anda telah berhasil masuk ke akun kasir Hairdept Barbershop.
+          </Text>
 
-//   return (
-//     <SafeAreaView style={styles.container}>
-//       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+          <View style={styles.infoBadge}>
+            <Text style={styles.infoBadgeText}>
+              Status Autentikasi: TERVERIFIKASI (LOGGED IN)
+            </Text>
+          </View>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
 
-//       {/* Header */}
-//       <View style={styles.header}>
-//         <View>
-//           <Text style={styles.appSubtitle}>
-//             {user?.username ? `KASIR: ${user.username.toUpperCase()}` : 'HAIRDEPT CASHIER'}
-//           </Text>
-//           <Text style={styles.appTitle}>Antrean Kasir</Text>
-//         </View>
-//         <View style={styles.headerActions}>
-//           <TouchableOpacity
-//             style={styles.logoutHeaderBtn}
-//             onPress={handleLogout}
-//             activeOpacity={0.7}
-//           >
-//             <Text style={styles.logoutHeaderBtnText}>Logout</Text>
-//           </TouchableOpacity>
-//           <TouchableOpacity
-//             style={styles.newOrderHeaderBtn}
-//             onPress={() => navigation.navigate('NewOrdersTab')}
-//             activeOpacity={0.8}
-//           >
-//             <Text style={styles.newOrderHeaderBtnText}>+ Check-in Baru</Text>
-//           </TouchableOpacity>
-//         </View>
-//       </View>
-
-//       {/* Quick Filter Tabs */}
-//       <View style={styles.tabContainer}>
-//         {(['ALL', 'WAITING', 'IN_SERVICE', 'COMPLETED'] as QuickFilterTab[]).map((tab) => {
-//           const isActive = activeTab === tab;
-//           const label =
-//             tab === 'ALL'
-//               ? 'All'
-//               : tab === 'WAITING'
-//               ? 'Waiting'
-//               : tab === 'IN_SERVICE'
-//               ? 'In Service'
-//               : 'Completed';
-//           return (
-//             <TouchableOpacity
-//               key={tab}
-//               style={[styles.tabButton, isActive && styles.tabButtonActive]}
-//               onPress={() => setActiveTab(tab)}
-//               activeOpacity={0.7}
-//             >
-//               <Text style={[styles.tabButtonText, isActive && styles.tabButtonTextActive]}>
-//                 {label}
-//               </Text>
-//             </TouchableOpacity>
-//           );
-//         })}
-//       </View>
-
-//       {/* Main Order List */}
-//       <ScrollView contentContainerStyle={styles.scrollContent}>
-//         {filteredOrders.length === 0 ? (
-//           <View style={styles.emptyContainer}>
-//             <Text style={styles.emptyIcon}>📋</Text>
-//             <Text style={styles.emptyText}>Tidak ada antrean</Text>
-//             <Text style={styles.emptySubtext}>
-//               Belum ada pelanggan pada status ini. Tekan tombol di bawah untuk menambah antrean.
-//             </Text>
-//           </View>
-//         ) : (
-//           <View style={styles.listContainer}>
-//             <Text style={styles.sectionHeader}>
-//               Daftar Antrean ({filteredOrders.length})
-//             </Text>
-//             {filteredOrders.map((ord) => {
-//               const badge = getStatusBadge(ord.status);
-//               return (
-//                 <TouchableOpacity
-//                   key={ord.id}
-//                   style={styles.orderCard}
-//                   onPress={() =>
-//                     navigation.navigate('OrderDetail', {
-//                       orderId: ord.id,
-//                       customerName: ord.customerName,
-//                       status: ord.status,
-//                     })
-//                   }
-//                   activeOpacity={0.75}
-//                 >
-//                   <View style={styles.cardHeader}>
-//                     <Text style={styles.orderCode}>{ord.code}</Text>
-//                     <View style={[styles.statusBadge, { backgroundColor: badge.bg }]}>
-//                       <Text style={[styles.statusBadgeText, { color: badge.text }]}>
-//                         {badge.label}
-//                       </Text>
-//                     </View>
-//                   </View>
-
-//                   <View style={styles.cardBody}>
-//                     <Text style={styles.customerName}>{ord.customerName}</Text>
-//                     <Text style={styles.serviceDetail}>
-//                       {ord.serviceName} • Kapster: {ord.kapsterName}
-//                     </Text>
-//                     <View style={styles.cardFooter}>
-//                       <Text style={styles.orderTime}>Check-in: {ord.time} WIB</Text>
-//                       <Text style={styles.orderPrice}>{ord.price}</Text>
-//                     </View>
-//                   </View>
-
-//                   <View style={styles.cardActionRow}>
-//                     <Text style={styles.cardActionText}>
-//                       {ord.status === 'COMPLETED'
-//                         ? '👉 Siap Bayar (Tap untuk proses) →'
-//                         : 'Lihat Detail Order →'}
-//                     </Text>
-//                   </View>
-//                 </TouchableOpacity>
-//               );
-//             })}
-//           </View>
-//         )}
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#0F172A',
-//   },
-//   header: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     paddingHorizontal: 20,
-//     paddingTop: 16,
-//     paddingBottom: 16,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#1E293B',
-//   },
-//   appSubtitle: {
-//     color: '#38BDF8',
-//     fontSize: 11,
-//     fontWeight: '700',
-//     letterSpacing: 1.2,
-//     textTransform: 'uppercase',
-//   },
-//   appTitle: {
-//     color: '#F8FAFC',
-//     fontSize: 22,
-//     fontWeight: '800',
-//     marginTop: 2,
-//   },
-//   headerActions: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: 8,
-//   },
-//   logoutHeaderBtn: {
-//     backgroundColor: '#1E293B',
-//     paddingVertical: 8,
-//     paddingHorizontal: 12,
-//     borderRadius: 8,
-//     borderWidth: 1,
-//     borderColor: '#334155',
-//   },
-//   logoutHeaderBtnText: {
-//     color: '#94A3B8',
-//     fontWeight: '700',
-//     fontSize: 12,
-//   },
-//   newOrderHeaderBtn: {
-//     backgroundColor: '#2563EB',
-//     paddingVertical: 8,
-//     paddingHorizontal: 14,
-//     borderRadius: 8,
-//   },
-//   newOrderHeaderBtnText: {
-//     color: '#FFFFFF',
-//     fontWeight: '700',
-//     fontSize: 13,
-//   },
-//   tabContainer: {
-//     flexDirection: 'row',
-//     paddingHorizontal: 16,
-//     paddingVertical: 12,
-//     backgroundColor: '#1E293B',
-//     gap: 8,
-//   },
-//   tabButton: {
-//     flex: 1,
-//     paddingVertical: 8,
-//     alignItems: 'center',
-//     borderRadius: 6,
-//     backgroundColor: '#334155',
-//   },
-//   tabButtonActive: {
-//     backgroundColor: '#2563EB',
-//   },
-//   tabButtonText: {
-//     color: '#94A3B8',
-//     fontSize: 12,
-//     fontWeight: '600',
-//   },
-//   tabButtonTextActive: {
-//     color: '#FFFFFF',
-//     fontWeight: '700',
-//   },
-//   scrollContent: {
-//     padding: 16,
-//     paddingBottom: 40,
-//   },
-//   emptyContainer: {
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     paddingVertical: 60,
-//     paddingHorizontal: 20,
-//   },
-//   emptyIcon: {
-//     fontSize: 48,
-//     marginBottom: 16,
-//   },
-//   emptyText: {
-//     color: '#F8FAFC',
-//     fontSize: 18,
-//     fontWeight: '700',
-//     marginBottom: 8,
-//   },
-//   emptySubtext: {
-//     color: '#64748B',
-//     fontSize: 14,
-//     textAlign: 'center',
-//     lineHeight: 20,
-//   },
-//   sectionHeader: {
-//     color: '#94A3B8',
-//     fontSize: 13,
-//     fontWeight: '700',
-//     textTransform: 'uppercase',
-//     letterSpacing: 0.8,
-//     marginBottom: 12,
-//   },
-//   listContainer: {
-//     gap: 12,
-//   },
-//   orderCard: {
-//     backgroundColor: '#1E293B',
-//     borderRadius: 12,
-//     padding: 16,
-//     borderWidth: 1,
-//     borderColor: '#334155',
-//   },
-//   cardHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 8,
-//   },
-//   orderCode: {
-//     color: '#94A3B8',
-//     fontSize: 13,
-//     fontWeight: '700',
-//   },
-//   statusBadge: {
-//     paddingHorizontal: 10,
-//     paddingVertical: 4,
-//     borderRadius: 9999,
-//   },
-//   statusBadgeText: {
-//     fontSize: 11,
-//     fontWeight: '700',
-//   },
-//   cardBody: {
-//     gap: 4,
-//   },
-//   customerName: {
-//     color: '#F8FAFC',
-//     fontSize: 17,
-//     fontWeight: '700',
-//   },
-//   serviceDetail: {
-//     color: '#CBD5E1',
-//     fontSize: 13,
-//     marginTop: 2,
-//   },
-//   cardFooter: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginTop: 8,
-//     paddingTop: 8,
-//     borderTopWidth: 1,
-//     borderTopColor: '#334155',
-//   },
-//   orderTime: {
-//     color: '#64748B',
-//     fontSize: 12,
-//   },
-//   orderPrice: {
-//     color: '#10B981',
-//     fontSize: 15,
-//     fontWeight: '800',
-//   },
-//   cardActionRow: {
-//     marginTop: 10,
-//     alignItems: 'flex-end',
-//   },
-//   cardActionText: {
-//     color: '#38BDF8',
-//     fontSize: 12,
-//     fontWeight: '600',
-//   },
-// });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0F172A',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+  },
+  appSubtitle: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+  },
+  appTitle: {
+    color: '#F8FAFC',
+    fontSize: 22,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  logoutBtn: {
+    backgroundColor: '#EF4444',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+  },
+  logoutBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  welcomeCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  avatarCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  welcomeTitle: {
+    color: '#F8FAFC',
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  welcomeSubtitle: {
+    color: '#94A3B8',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  infoBadge: {
+    backgroundColor: '#064E3B',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  infoBadgeText: {
+    color: '#34D399',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+});

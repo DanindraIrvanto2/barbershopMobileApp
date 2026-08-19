@@ -21,22 +21,23 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Perhatian', 'Email/Username dan password tidak boleh kosong');
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Perhatian', 'Email/Username dan Password wajib diisi');
       return;
     }
 
     setLoading(true);
-    // Simulasi login (akan dihubungkan ke POST /api/auth/login di fase integrasi API)
+
+    // Simulasi autentikasi (akan disambungkan ke API backend POST /api/auth/login)
     setTimeout(() => {
       login({
         id: 1,
-        username: email.split('@')[0],
+        username: email.includes('@') ? email.split('@')[0] : email,
         email: email,
-        role: 'admin',
+        role: 'kasir',
       });
       setLoading(false);
-      navigation.replace('MainTabs');
+      navigation.replace('Orders');
     }, 400);
   };
 
@@ -48,7 +49,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.innerContainer}>
-          {/* Header & Logo */}
+          {/* Logo & Header */}
           <View style={styles.header}>
             <View style={styles.logoBadge}>
               <Text style={styles.logoBadgeText}>HD</Text>
@@ -57,19 +58,19 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             <Text style={styles.appSubtitle}>PORTAL KASIR MOBILE</Text>
           </View>
 
-          {/* Login Card */}
+          {/* Form Card */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Masuk ke Akun Kasir</Text>
             <Text style={styles.cardSubtitle}>
-              Gunakan kredensial akun kasir atau admin untuk mengakses antrean
+              Masukkan email dan password untuk mulai mengelola antrean
             </Text>
 
-            {/* Email / Username Input */}
+            {/* Input Email / Username */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email atau Username</Text>
               <TextInput
                 style={styles.input}
-                placeholder="nama@hairdept.com"
+                placeholder="kasir@hairdept.com"
                 placeholderTextColor="#64748B"
                 value={email}
                 onChangeText={setEmail}
@@ -78,7 +79,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               />
             </View>
 
-            {/* Password Input */}
+            {/* Input Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Password</Text>
               <TextInput
@@ -91,7 +92,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               />
             </View>
 
-            {/* Login Button */}
+            {/* Tombol Login */}
             <TouchableOpacity
               style={[styles.loginButton, loading && styles.loginButtonDisabled]}
               onPress={handleLogin}
@@ -99,11 +100,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
               disabled={loading}
             >
               <Text style={styles.loginButtonText}>
-                {loading ? 'Memproses Masuk...' : 'Masuk ke Kasir →'}
+                {loading ? 'Memproses...' : 'Masuk ke Kasir →'}
               </Text>
             </TouchableOpacity>
 
-            {/* Hint / Demo Account */}
+            {/* Box Info Demo */}
             <View style={styles.demoBox}>
               <Text style={styles.demoTitle}>Akun Demo Kasir:</Text>
               <Text style={styles.demoText}>Email: kasir@hairdept.com</Text>
@@ -135,9 +136,9 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   logoBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
+    width: 64,
+    height: 64,
+    borderRadius: 18,
     backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
   },
   logoBadgeText: {
     color: '#FFFFFF',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
     letterSpacing: 1,
   },
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
   },
   demoBox: {
     marginTop: 16,
-    padding: 10,
+    padding: 12,
     backgroundColor: '#0F172A',
     borderRadius: 8,
     borderLeftWidth: 3,
@@ -239,12 +240,12 @@ const styles = StyleSheet.create({
   },
   demoTitle: {
     color: '#38BDF8',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     marginBottom: 2,
   },
   demoText: {
     color: '#94A3B8',
-    fontSize: 11,
+    fontSize: 12,
   },
 });

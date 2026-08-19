@@ -4,10 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
 
 import LoginScreen from '../screens/LoginScreen';
-import BottomTabNavigator from './BottomTabNavigator';
-// import OrderDetailScreen from '../screens/OrderDetailScreen';
-// import PaymentScreen from '../screens/PaymentScreen';
-// import InvoicePreviewScreen from '../screens/InvoicePreviewScreen';
+import OrdersScreen from '../screens/OrdersScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -32,7 +29,7 @@ export default function AppNavigator() {
           },
         }}
       >
-        {/* Auth Gateway */}
+        {/* 1. Login Screen (Pintu Masuk Utama) */}
         <Stack.Screen
           name="Login"
           component={LoginScreen}
@@ -41,41 +38,15 @@ export default function AppNavigator() {
           }}
         />
 
-        {/* 2 Main Tabs: Antrean (Orders) & Check-in (NewOrders) */}
+        {/* 2. Orders Screen (Landing Page setelah Login) */}
         <Stack.Screen
-          name="MainTabs"
-          component={BottomTabNavigator}
+          name="Orders"
+          component={OrdersScreen}
           options={{
             headerShown: false,
           }}
         />
-
-        {/* Cashier Order Management & Payment Flow */}
-        {/* <Stack.Screen
-          name="OrderDetail"
-          component={OrderDetailScreen}
-          options={{
-            title: 'Detail Order',
-            headerShown: true,
-          }}
-        // /> */}
-        // <Stack.Screen
-        //   name="Payment"
-        //   component={PaymentScreen}
-        //   options={{
-        //     title: 'Kasir Pembayaran',
-        //     headerShown: true,
-        //   }}
-        // />
-        {/* <Stack.Screen
-          name="InvoicePreview"
-          // component={InvoicePreviewScreen}
-          options={{
-            title: 'Pratinjau Struk',
-        //     headerShown: true, */}
-        {/* //   }}
-        // /> */}
-  //     </Stack.Navigator>
-  //   </NavigationContainer>
-  // );
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
