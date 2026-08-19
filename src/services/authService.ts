@@ -12,16 +12,26 @@ export interface LoginResponse {
 }
 
 export const authService = {
-  login: async (emailOrUsername: string, password: string):Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>('/auth/login', {
-      email: emailOrUsername,
-      password,
-    });
-    return response.data;
+  login: async (emailOrUsername: string, password: string): Promise<LoginResponse> => {
+    try {
+      const response = await api.post<LoginResponse>('/auth/login', {
+        email: emailOrUsername,
+        password,
+      });
+      return response.data;
+    } catch (error) {
+      console.log('authService login error:', error);
+      throw error;
+    }
   },
 
   getMe: async () => {
-    const response = await api.get('/auth/me');
-    return response.data;
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      console.log('authService getMe error:', error);
+      throw error;
+    }
   },
 };
