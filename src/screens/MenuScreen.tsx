@@ -12,7 +12,7 @@ import {
 import type { MenuScreenProps } from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
 
-export default function MenuScreen({ navigation }: MenuScreenProps) {
+export default function MenuScreen({ navigation }: any) {
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
@@ -60,7 +60,7 @@ export default function MenuScreen({ navigation }: MenuScreenProps) {
         <View style={styles.welcomeCard}>
           <Text style={styles.welcomeSubtitle}>PORTAL KASIR MOBILE</Text>
           <Text style={styles.welcomeTitle}>
-            Selamat Datang, {user?.username || 'Kasir'}! 👋
+            Selamat Datang, {user?.username || 'Kasir'}! 
           </Text>
           <Text style={styles.welcomeDesc}>
             Anda telah berhasil masuk ke sistem POS Hairdept Barbershop.

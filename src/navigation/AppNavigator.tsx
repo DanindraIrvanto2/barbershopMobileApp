@@ -22,6 +22,8 @@ export default function AppNavigator() {
       >
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Menu" component={MenuScreen} />
+        {/* Alias fallback untuk kompatibilitas */}
+        <Stack.Screen name="Orders" component={MenuScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
