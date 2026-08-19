@@ -73,12 +73,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     }
   };
 
-  const fillDemoAccount = () => {
-    setEmail('admin@hairdept.com');
-    setPassword('admin123');
-    setErrorMsg('');
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -172,17 +166,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             >
               <Text style={styles.submitButtonText}>
                 {loading ? 'Logging in...' : 'Log in'}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Quick Fill Demo */}
-            <TouchableOpacity
-              style={styles.quickFillBtn}
-              onPress={fillDemoAccount}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.quickFillText}>
-                💡 Akun Bawaan: admin@hairdept.com / admin123
               </Text>
             </TouchableOpacity>
           </View>
@@ -356,16 +339,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.2,
-  },
-  quickFillBtn: {
-    marginTop: 16,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  quickFillText: {
-    color: '#64748B',
-    fontSize: 12,
-    fontWeight: '600',
   },
   footer: {
     alignItems: 'center',
