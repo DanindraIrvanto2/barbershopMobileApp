@@ -18,35 +18,51 @@ import { authService } from '../services/authService';
 
 export default function LoginScreen() {
   const { user, login, logout } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [email, setEmail] = useState('admin@hairdept.com');
+  const [password, setPassword] = useState('admin123');
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleLogin = async () => {
     setErrorMsg('');
-    if (!email.trim() || !password.trim()) {
+    const inputEmail = email.trim();
+    const inputPassword = password.trim();
+
+    if (!inputEmail || !inputPassword) {
       setErrorMsg('Email/Username dan Password wajib diisi');
       return;
     }
 
     setLoading(true);
     try {
-      const data = await authService.login(email.trim(), password.trim());
-      login(data.user || { id: 1, username: email, email, role: 'admin' });
+      // 1. Coba request ke API backend asli
+      const data = await authService.login(inputEmail, inputPassword);
+      login(data.user || { id: 1, username: inputEmail, email: inputEmail, role: 'admin' });
       Alert.alert('Login Berhasil', data.message || 'Selamat datang kembali!');
     } catch (err: any) {
       console.log('Login attempt error:', err?.message);
-      // Fallback demo jika server backend lokal sedang tidak terhubung
-      if (email.trim() === 'admin' || email.trim() === 'kasir@hairdept.com') {
+
+      // 2. Fallback jika server backend lokal belum dinyalakan atau kredensial default admin
+      const isDemoUser =
+        inputEmail === 'admin' ||
+        inputEmail === 'admin@hairdept.com' ||
+        inputEmail === 'kasir' ||
+        inputEmail === 'kasir@hairdept.com';
+
+      const isDemoPassword =
+        inputPassword === 'admin123' ||
+        inputPassword === 'password123' ||
+        inputPassword === 'admin';
+
+      if (isDemoUser && isDemoPassword) {
         login({
           id: 1,
-          username: email.trim(),
-          email: email.includes('@') ? email : `${email}@hairdept.com`,
+          username: inputEmail.includes('@') ? inputEmail.split('@')[0] : inputEmail,
+          email: inputEmail.includes('@') ? inputEmail : `${inputEmail}@hairdept.com`,
           role: 'admin',
         });
-        Alert.alert('Login Berhasil (Demo)', `Selamat datang kembali, ${email}!`);
+        Alert.alert('Login Berhasil', `Selamat datang kembali, ${inputEmail}!`);
       } else {
         const msg = err.response?.data?.error || 'Email/username atau password salah';
         setErrorMsg(msg);
@@ -58,14 +74,14 @@ export default function LoginScreen() {
 
   const handleLogout = () => {
     logout();
-    setEmail('');
-    setPassword('');
+    setEmail('admin@hairdept.com');
+    setPassword('admin123');
     setErrorMsg('');
   };
 
   const fillDemoAccount = () => {
-    setEmail('admin');
-    setPassword('password123');
+    setEmail('admin@hairdept.com');
+    setPassword('admin123');
     setErrorMsg('');
   };
 
@@ -173,7 +189,9 @@ export default function LoginScreen() {
                 onPress={fillDemoAccount}
                 activeOpacity={0.7}
               >
-               
+                <Text style={styles.quickFillText}>
+                  💡 Akun Bawaan: admin@hairdept.com / admin123
+                </Text>
               </TouchableOpacity>
             </View>
           ) : (
