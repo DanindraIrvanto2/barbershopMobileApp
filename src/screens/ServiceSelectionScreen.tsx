@@ -43,11 +43,11 @@ export default function ServiceSelectionScreen({ navigation }: ServiceSelectionS
             activeOpacity={0.7}
           >
             <View style={styles.serviceIcon}>
-              <Text style={styles.serviceIconText}>💇‍♂️</Text>
+              <Text style={styles.serviceIconText}>{srv.name[0]}</Text>
             </View>
             <View style={styles.srvInfo}>
               <Text style={styles.srvName}>{srv.name}</Text>
-              <Text style={styles.srvDuration}>⏱ Durasi: {srv.duration}</Text>
+              <Text style={styles.srvDuration}>Durasi: {srv.duration}</Text>
             </View>
             <View style={styles.priceContainer}>
               <Text style={styles.srvPrice}>{srv.price}</Text>
@@ -146,13 +146,15 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#334155',
+    backgroundColor: '#059669',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   serviceIconText: {
-    fontSize: 18,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   srvInfo: {
     flex: 1,

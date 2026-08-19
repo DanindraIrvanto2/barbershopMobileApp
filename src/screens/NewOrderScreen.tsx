@@ -46,28 +46,28 @@ export default function NewOrderScreen({ navigation }: NewOrderScreenProps) {
           <Text style={styles.cardTitle}>Detail Order Baru</Text>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>👤 Customer</Text>
+            <Text style={styles.detailLabel}>Customer</Text>
             <TouchableOpacity onPress={() => navigation.navigate('CustomerSelection')}>
               <Text style={styles.detailValueAction}>Ahmad Faiz (Ubah)</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>✂️ Kapster</Text>
+            <Text style={styles.detailLabel}>Kapster</Text>
             <TouchableOpacity onPress={() => navigation.navigate('KapsterSelection')}>
               <Text style={styles.detailValueAction}>Budi Santoso (Ubah)</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>💈 Layanan</Text>
+            <Text style={styles.detailLabel}>Layanan</Text>
             <TouchableOpacity onPress={() => navigation.navigate('ServiceSelection')}>
               <Text style={styles.detailValueAction}>Haircut Regular (Ubah)</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>⏱ Check-in Time</Text>
+            <Text style={styles.detailLabel}>Check-in Time</Text>
             <Text style={styles.detailValue}>09:30 WIB</Text>
           </View>
 

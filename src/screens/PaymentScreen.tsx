@@ -45,7 +45,11 @@ export default function PaymentScreen({ route, navigation }: PaymentScreenProps)
             onPress={() => setSelectedMethod('CASH')}
             activeOpacity={0.8}
           >
-            <Text style={styles.methodIcon}>💵</Text>
+            <View style={[styles.methodBadge, selectedMethod === 'CASH' && styles.methodBadgeActive]}>
+              <Text style={[styles.methodBadgeText, selectedMethod === 'CASH' && styles.methodBadgeTextActive]}>
+                CASH
+              </Text>
+            </View>
             <Text style={[styles.methodTitle, selectedMethod === 'CASH' && styles.methodTitleActive]}>
               Tunai (Cash)
             </Text>
@@ -57,7 +61,11 @@ export default function PaymentScreen({ route, navigation }: PaymentScreenProps)
             onPress={() => setSelectedMethod('QRIS')}
             activeOpacity={0.8}
           >
-            <Text style={styles.methodIcon}>📱</Text>
+            <View style={[styles.methodBadge, selectedMethod === 'QRIS' && styles.methodBadgeActive]}>
+              <Text style={[styles.methodBadgeText, selectedMethod === 'QRIS' && styles.methodBadgeTextActive]}>
+                QRIS
+              </Text>
+            </View>
             <Text style={[styles.methodTitle, selectedMethod === 'QRIS' && styles.methodTitleActive]}>
               QRIS
             </Text>
@@ -194,9 +202,24 @@ const styles = StyleSheet.create({
     borderColor: '#3B82F6',
     backgroundColor: '#1E3A5F',
   },
-  methodIcon: {
-    fontSize: 32,
+  methodBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#334155',
     marginBottom: 8,
+  },
+  methodBadgeActive: {
+    backgroundColor: '#2563EB',
+  },
+  methodBadgeText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  methodBadgeTextActive: {
+    color: '#FFFFFF',
   },
   methodTitle: {
     color: '#94A3B8',

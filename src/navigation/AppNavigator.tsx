@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types/navigation';
 
+import LoginScreen from '../screens/LoginScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import NewOrderScreen from '../screens/NewOrderScreen';
 import CustomerSelectionScreen from '../screens/CustomerSelectionScreen';
@@ -18,7 +19,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Orders"
+        initialRouteName="Login"
         screenOptions={{
           headerStyle: {
             backgroundColor: '#0F172A',
@@ -35,6 +36,15 @@ export default function AppNavigator() {
           },
         }}
       >
+        {/* Auth / Login Screen */}
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+
         {/* Main Cashier Orders Screen */}
         <Stack.Screen
           name="Orders"

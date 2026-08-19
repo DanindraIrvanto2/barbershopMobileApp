@@ -33,7 +33,7 @@ export default function InvoicePreviewScreen({ route, navigation }: InvoicePrevi
         {/* Receipt Paper Design */}
         <View style={styles.receiptContainer}>
           <View style={styles.receiptHeader}>
-            <Text style={styles.shopName}>💈 HAIRDEPT BARBERSHOP</Text>
+            <Text style={styles.shopName}>HAIRDEPT BARBERSHOP</Text>
             <Text style={styles.shopAddress}>Jl. Barbershop No. 123, Jakarta</Text>
             <Text style={styles.shopContact}>Telp: 0812-3456-7890</Text>
           </View>

@@ -11,8 +11,16 @@ import {
 import type { OrdersScreenProps } from '../types/navigation';
 import type { QuickFilterTab } from '../types/order';
 
+import { useAuth } from '../context/AuthContext';
+
 export default function OrdersScreen({ navigation }: OrdersScreenProps) {
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<QuickFilterTab>('ALL');
+
+  const handleLogout = () => {
+    logout();
+    navigation.replace('Login');
+  };
 
   // Placeholder sample items to allow testing the Order Detail flow easily
   const sampleOrders = [
@@ -73,16 +81,27 @@ export default function OrdersScreen({ navigation }: OrdersScreenProps) {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.appSubtitle}>HAIRDEPT CASHIER</Text>
+          <Text style={styles.appSubtitle}>
+            {user?.username ? `KASIR: ${user.username.toUpperCase()}` : 'HAIRDEPT CASHIER'}
+          </Text>
           <Text style={styles.appTitle}>Orders / Antrean</Text>
         </View>
-        <TouchableOpacity
-          style={styles.newOrderHeaderBtn}
-          onPress={() => navigation.navigate('CustomerSelection')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.newOrderHeaderBtnText}>+ NEW ORDER</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.logoutHeaderBtn}
+            onPress={handleLogout}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.logoutHeaderBtnText}>Logout</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.newOrderHeaderBtn}
+            onPress={() => navigation.navigate('CustomerSelection')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.newOrderHeaderBtnText}>+ NEW ORDER</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Quick Filter Tabs */}
@@ -116,7 +135,6 @@ export default function OrdersScreen({ navigation }: OrdersScreenProps) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {filteredOrders.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📋</Text>
             <Text style={styles.emptyText}>No orders yet</Text>
             <Text style={styles.emptySubtext}>
               Belum ada antrean untuk status ini. Tekan tombol di bawah untuk membuat order baru.
@@ -152,10 +170,10 @@ export default function OrdersScreen({ navigation }: OrdersScreenProps) {
                   <View style={styles.cardBody}>
                     <Text style={styles.customerName}>{ord.customerName}</Text>
                     <Text style={styles.serviceDetail}>
-                      💈 {ord.serviceName} • 👤 {ord.kapsterName}
+                      {ord.serviceName} • {ord.kapsterName}
                     </Text>
                     <View style={styles.cardFooter}>
-                      <Text style={styles.orderTime}>⏱ Check-in: {ord.time}</Text>
+                      <Text style={styles.orderTime}>Check-in: {ord.time}</Text>
                       <Text style={styles.orderPrice}>{ord.price}</Text>
                     </View>
                   </View>
@@ -211,6 +229,24 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoutHeaderBtn: {
+    backgroundColor: '#334155',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#475569',
+  },
+  logoutHeaderBtnText: {
+    color: '#94A3B8',
+    fontWeight: '700',
+    fontSize: 12,
   },
   newOrderHeaderBtn: {
     backgroundColor: '#3B82F6',

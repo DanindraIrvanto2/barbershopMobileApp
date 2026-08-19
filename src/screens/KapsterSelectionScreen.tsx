@@ -42,7 +42,7 @@ export default function KapsterSelectionScreen({ navigation }: KapsterSelectionS
             activeOpacity={0.7}
           >
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>✂️</Text>
+              <Text style={styles.avatarText}>{kap.name[0]}</Text>
             </View>
             <View style={styles.kapInfo}>
               <Text style={styles.kapName}>{kap.name}</Text>
@@ -147,13 +147,15 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#334155',
+    backgroundColor: '#0284C7',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   avatarText: {
-    fontSize: 18,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   kapInfo: {
     flex: 1,

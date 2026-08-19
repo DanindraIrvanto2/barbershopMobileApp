@@ -84,7 +84,7 @@ export default function OrderDetailScreen({ route, navigation }: OrderDetailScre
             onPress={() => navigation.navigate('Payment', { orderId, totalAmount: 90000 })}
             activeOpacity={0.8}
           >
-            <Text style={styles.actionBtnPrimaryText}>💳 Bayar Sekarang (Ke Halaman Payment) →</Text>
+            <Text style={styles.actionBtnPrimaryText}>Bayar Sekarang (Ke Halaman Payment) →</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -92,7 +92,7 @@ export default function OrderDetailScreen({ route, navigation }: OrderDetailScre
             onPress={() => navigation.navigate('InvoicePreview', { orderId, invoiceNumber: `INV-${orderId}` })}
             activeOpacity={0.8}
           >
-            <Text style={styles.actionBtnSecondaryText}>🧾 Lihat Invoice Preview Langsung →</Text>
+            <Text style={styles.actionBtnSecondaryText}>Lihat Invoice Preview Langsung →</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

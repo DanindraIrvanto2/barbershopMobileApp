@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
+  Login: undefined;
   Orders: undefined;
   NewOrder: undefined;
   CustomerSelection: undefined;
@@ -11,6 +12,7 @@ export type RootStackParamList = {
   InvoicePreview: { orderId?: number; invoiceNumber?: string } | undefined;
 };
 
+export type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
 export type OrdersScreenProps = NativeStackScreenProps<RootStackParamList, 'Orders'>;
 export type NewOrderScreenProps = NativeStackScreenProps<RootStackParamList, 'NewOrder'>;
 export type CustomerSelectionScreenProps = NativeStackScreenProps<RootStackParamList, 'CustomerSelection'>;

@@ -47,7 +47,7 @@ export default function CustomerSelectionScreen({ navigation }: CustomerSelectio
             </View>
             <View style={styles.custInfo}>
               <Text style={styles.custName}>{cust.name}</Text>
-              <Text style={styles.custPhone}>📱 {cust.phone}</Text>
+              <Text style={styles.custPhone}>{cust.phone}</Text>
             </View>
             <Text style={styles.selectText}>Pilih →</Text>
           </TouchableOpacity>
