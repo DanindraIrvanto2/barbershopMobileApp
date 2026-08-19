@@ -40,7 +40,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       // 1. Request ke API backend
       const data = await authService.login(inputEmail, inputPassword);
       login(data.user || { id: 1, username: inputEmail, email: inputEmail, role: 'admin' });
-      navigation.replace('Orders');
+      navigation.replace('Menu');
     } catch (err: any) {
       console.log('Login attempt error:', err?.message);
 
@@ -63,7 +63,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           email: inputEmail.includes('@') ? inputEmail : `${inputEmail}@hairdept.com`,
           role: 'admin',
         });
-        navigation.replace('Orders');
+        navigation.replace('Menu');
       } else {
         const msg = err.response?.data?.error || 'Email/username atau password salah';
         setErrorMsg(msg);
