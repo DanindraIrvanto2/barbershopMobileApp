@@ -13,8 +13,8 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/authService';
 
 export default function LoginScreen() {
   const { user, login, logout } = useAuth();
@@ -23,10 +23,6 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  const API_URL =
-    process.env.EXPO_PUBLIC_API_URL ||
-    (Platform.OS === 'android' ? 'http://10.0.2.2:3001/api' : 'http://localhost:3001/api');
 
   const handleLogin = async () => {
     setErrorMsg('');
@@ -37,22 +33,12 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      // 1. Coba request ke API backend asli
-      const response = await axios.post(
-        `${API_URL}/auth/login`,
-        {
-          email: email.trim(),
-          password: password.trim(),
-        },
-        { timeout: 3000 }
-      );
-
-      const data = response.data;
+      const data = await authService.login(email.trim(), password.trim());
       login(data.user || { id: 1, username: email, email, role: 'admin' });
       Alert.alert('Login Berhasil', data.message || 'Selamat datang kembali!');
     } catch (err: any) {
       console.log('Login attempt error:', err?.message);
-      // Jika server lokal tidak sedang menyala, fallback autentikasi demo
+      // Fallback demo jika server backend lokal sedang tidak terhubung
       if (email.trim() === 'admin' || email.trim() === 'kasir@hairdept.com') {
         login({
           id: 1,
