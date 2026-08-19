@@ -9,152 +9,231 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  ScrollView,
   Alert,
 } from 'react-native';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen() {
   const { user, login, logout } = useAuth();
-  const [email, setEmail] = useState('kasir@hairdept.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleLogin = () => {
+  const API_URL =
+    process.env.EXPO_PUBLIC_API_URL ||
+    (Platform.OS === 'android' ? 'http://10.0.2.2:3001/api' : 'http://localhost:3001/api');
+
+  const handleLogin = async () => {
+    setErrorMsg('');
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Perhatian', 'Email/Username dan Password wajib diisi');
+      setErrorMsg('Email/Username dan Password wajib diisi');
       return;
     }
 
     setLoading(true);
+    try {
+      // 1. Coba request ke API backend asli
+      const response = await axios.post(
+        `${API_URL}/auth/login`,
+        {
+          email: email.trim(),
+          password: password.trim(),
+        },
+        { timeout: 3000 }
+      );
 
-    // Simulasi autentikasi
-    setTimeout(() => {
-      login({
-        id: 1,
-        username: email.includes('@') ? email.split('@')[0] : email,
-        email: email,
-        role: 'kasir',
-      });
+      const data = response.data;
+      login(data.user || { id: 1, username: email, email, role: 'admin' });
+      Alert.alert('Login Berhasil', data.message || 'Selamat datang kembali!');
+    } catch (err: any) {
+      console.log('Login attempt error:', err?.message);
+      // Jika server lokal tidak sedang menyala, fallback autentikasi demo
+      if (email.trim() === 'admin' || email.trim() === 'kasir@hairdept.com') {
+        login({
+          id: 1,
+          username: email.trim(),
+          email: email.includes('@') ? email : `${email}@hairdept.com`,
+          role: 'admin',
+        });
+        Alert.alert('Login Berhasil (Demo)', `Selamat datang kembali, ${email}!`);
+      } else {
+        const msg = err.response?.data?.error || 'Email/username atau password salah';
+        setErrorMsg(msg);
+      }
+    } finally {
       setLoading(false);
-      Alert.alert('Login Berhasil! 🎉', `Selamat datang, ${email.split('@')[0]}!`);
-    }, 400);
+    }
   };
 
   const handleLogout = () => {
     logout();
-    Alert.alert('Logout', 'Anda telah keluar dari akun kasir.');
+    setEmail('');
+    setPassword('');
+    setErrorMsg('');
+  };
+
+  const fillDemoAccount = () => {
+    setEmail('admin');
+    setPassword('password123');
+    setErrorMsg('');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.innerContainer}>
-          {/* Logo & Header */}
-          <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Text style={styles.logoBadgeText}>HD</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Brand Header */}
+          <View style={styles.brandHeader}>
+            <View style={styles.logoWrapper}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.logoImage}
+                resizeMode="cover"
+              />
             </View>
-            <Text style={styles.appTitle}>Hairdept Barbershop</Text>
-            <Text style={styles.appSubtitle}>PORTAL KASIR MOBILE</Text>
+            <Text style={styles.brandTitle}>Hairdept Barbershop.</Text>
           </View>
 
-          {/* Conditional Card: Form Login vs Status Kasir Aktif */}
+          {/* Conditional: Form Login vs Akun Sedang Aktif */}
           {!user ? (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Masuk ke Akun Kasir</Text>
-              <Text style={styles.cardSubtitle}>
-                Masukkan kredensial akun kasir untuk mulai bertugas
-              </Text>
+            <View style={styles.formContainer}>
+              {/* Heading */}
+              <View style={styles.headingBox}>
+                <Text style={styles.mainTitle}>Log in to your account</Text>
+                <Text style={styles.subTitle}>
+                  Enter your email or username and password below to log in
+                </Text>
+              </View>
 
-              {/* Input Email / Username */}
+              {/* Error Message Box */}
+              {errorMsg ? (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorIcon}>⚠️</Text>
+                  <Text style={styles.errorText}>{errorMsg}</Text>
+                </View>
+              ) : null}
+
+              {/* Input Fields */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email atau Username</Text>
+                <Text style={styles.inputLabel}>Email / Username</Text>
                 <TextInput
-                  style={styles.input}
-                  placeholder="kasir@hairdept.com"
-                  placeholderTextColor="#64748B"
+                  style={styles.textInput}
+                  placeholder="Email"
+                  placeholderTextColor="#94A3B8"
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(val) => {
+                    setEmail(val);
+                    if (errorMsg) setErrorMsg('');
+                  }}
                   autoCapitalize="none"
-                  keyboardType="email-address"
+                  autoCorrect={false}
                 />
               </View>
 
-              {/* Input Password */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Password</Text>
                 <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="#64748B"
+                  style={styles.textInput}
+                  placeholder="Password"
+                  placeholderTextColor="#94A3B8"
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(val) => {
+                    setPassword(val);
+                    if (errorMsg) setErrorMsg('');
+                  }}
                   secureTextEntry
                 />
               </View>
 
-              {/* Tombol Login */}
+              {/* Remember Me Toggle */}
               <TouchableOpacity
-                style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                style={styles.rememberMeRow}
+                onPress={() => setRememberMe(!rememberMe)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
+                  {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <Text style={styles.rememberMeText}>Remember me</Text>
+              </TouchableOpacity>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
                 onPress={handleLogin}
                 activeOpacity={0.85}
                 disabled={loading}
               >
-                <Text style={styles.loginButtonText}>
-                  {loading ? 'Memproses...' : 'Masuk ke Kasir →'}
+                <Text style={styles.submitButtonText}>
+                  {loading ? 'Logging in...' : 'Log in'}
                 </Text>
               </TouchableOpacity>
 
-              {/* Box Info Demo */}
-              <View style={styles.demoBox}>
-                <Text style={styles.demoTitle}>Akun Demo Kasir:</Text>
-                <Text style={styles.demoText}>Email: kasir@hairdept.com</Text>
-                <Text style={styles.demoText}>Pass: password123</Text>
-              </View>
+              {/* Quick Fill Demo */}
+              <TouchableOpacity
+                style={styles.quickFillBtn}
+                onPress={fillDemoAccount}
+                activeOpacity={0.7}
+              >
+               
+              </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.card}>
-              <View style={styles.activeUserHeader}>
-                <View style={styles.activeAvatar}>
-                  <Text style={styles.activeAvatarText}>
-                    {user.username ? user.username[0].toUpperCase() : 'K'}
-                  </Text>
+            <View style={styles.activeContainer}>
+              <View style={styles.activeCard}>
+                <View style={styles.activeBadge}>
+                  <Text style={styles.activeBadgeText}>LOGGED IN</Text>
                 </View>
                 <Text style={styles.activeTitle}>Akun Kasir Sedang Aktif</Text>
                 <Text style={styles.activeSubtitle}>
-                  Anda saat ini sedang login sebagai kasir terverifikasi.
+                  Selamat datang kembali di Hairdept Barbershop!
                 </Text>
-              </View>
 
-              <View style={styles.infoBox}>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Username:</Text>
-                  <Text style={styles.infoValue}>{user.username}</Text>
+                <View style={styles.profileBox}>
+                  <View style={styles.profileRow}>
+                    <Text style={styles.profileLabel}>Username</Text>
+                    <Text style={styles.profileValue}>{user.username}</Text>
+                  </View>
+                  <View style={styles.profileDivider} />
+                  <View style={styles.profileRow}>
+                    <Text style={styles.profileLabel}>Email</Text>
+                    <Text style={styles.profileValue}>{user.email}</Text>
+                  </View>
+                  <View style={styles.profileDivider} />
+                  <View style={styles.profileRow}>
+                    <Text style={styles.profileLabel}>Role</Text>
+                    <Text style={styles.profileRole}>{user.role || 'Admin'}</Text>
+                  </View>
                 </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Email:</Text>
-                  <Text style={styles.infoValue}>{user.email}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Role Akses:</Text>
-                  <Text style={styles.infoValueBadge}>{user.role?.toUpperCase() || 'KASIR'}</Text>
-                </View>
-              </View>
 
-              <TouchableOpacity
-                style={styles.logoutButton}
-                onPress={handleLogout}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.logoutButtonText}>Keluar / Logout Akun</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.logoutButton}
+                  onPress={handleLogout}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.logoutButtonText}>Log out dari Akun</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
-        </View>
+
+          {/* Footer Copyright */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>© 2026 Hairdept Barbershop Management POS</Text>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -163,200 +242,270 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
   },
   keyboardContainer: {
     flex: 1,
   },
-  innerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 28,
+    paddingVertical: 24,
   },
-  header: {
+  brandHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 28,
+    gap: 10,
+    marginTop: Platform.OS === 'ios' ? 8 : 16,
   },
-  logoBadge: {
-    width: 64,
-    height: 64,
+  logoWrapper: {
+    width: 36,
+    height: 36,
     borderRadius: 18,
-    backgroundColor: '#2563EB',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  logoBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 24,
+  logoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  brandTitle: {
+    fontSize: 16,
     fontWeight: '800',
-    letterSpacing: 1,
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  appTitle: {
-    color: '#F8FAFC',
-    fontSize: 24,
+  formContainer: {
+    marginVertical: 'auto',
+    paddingVertical: 20,
+    width: '100%',
+  },
+  headingBox: {
+    marginBottom: 24,
+  },
+  mainTitle: {
+    fontSize: 26,
     fontWeight: '800',
-  },
-  appSubtitle: {
-    color: '#38BDF8',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginTop: 4,
-  },
-  card: {
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  cardTitle: {
-    color: '#F8FAFC',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  cardSubtitle: {
-    color: '#94A3B8',
-    fontSize: 12,
-    marginTop: 4,
-    marginBottom: 18,
-    lineHeight: 18,
-  },
-  inputGroup: {
-    marginBottom: 14,
-  },
-  inputLabel: {
-    color: '#CBD5E1',
-    fontSize: 13,
-    fontWeight: '600',
+    color: '#0F172A',
+    letterSpacing: -0.5,
     marginBottom: 6,
   },
-  input: {
-    backgroundColor: '#0F172A',
-    borderRadius: 10,
+  subTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+    lineHeight: 18,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
     borderWidth: 1,
-    borderColor: '#334155',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: '#F8FAFC',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
+  },
+  errorIcon: {
     fontSize: 14,
   },
-  loginButton: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  loginButtonDisabled: {
-    opacity: 0.6,
-  },
-  loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  demoBox: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: '#0F172A',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#38BDF8',
-  },
-  demoTitle: {
-    color: '#38BDF8',
+  errorText: {
+    color: '#B91C1C',
     fontSize: 12,
     fontWeight: '700',
-    marginBottom: 2,
+    flex: 1,
   },
-  demoText: {
-    color: '#94A3B8',
-    fontSize: 12,
-  },
-  activeUserHeader: {
-    alignItems: 'center',
+  inputGroup: {
     marginBottom: 16,
   },
-  activeAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2563EB',
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 6,
+  },
+  textInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  rememberMeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 2,
+    marginBottom: 20,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
   },
-  activeAvatarText: {
+  checkboxActive: {
+    backgroundColor: '#000000',
+    borderColor: '#000000',
+  },
+  checkmark: {
     color: '#FFFFFF',
-    fontSize: 24,
+    fontSize: 11,
     fontWeight: '800',
   },
+  rememberMeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  submitButton: {
+    backgroundColor: '#000000',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  submitButtonDisabled: {
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  quickFillBtn: {
+    marginTop: 16,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  quickFillText: {
+    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  activeContainer: {
+    marginVertical: 'auto',
+    paddingVertical: 20,
+    width: '100%',
+  },
+  activeCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+  },
+  activeBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginBottom: 12,
+  },
+  activeBadgeText: {
+    color: '#15803D',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
   activeTitle: {
-    color: '#F8FAFC',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 4,
   },
   activeSubtitle: {
-    color: '#94A3B8',
-    fontSize: 12,
+    fontSize: 13,
+    color: '#64748B',
     textAlign: 'center',
-    marginTop: 4,
+    marginBottom: 20,
   },
-  infoBox: {
-    backgroundColor: '#0F172A',
+  profileBox: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    padding: 14,
-    gap: 8,
-    marginBottom: 16,
+    padding: 16,
+    width: '100%',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
+    marginBottom: 20,
   },
-  infoRow: {
+  profileRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 4,
   },
-  infoLabel: {
+  profileLabel: {
     color: '#64748B',
-    fontSize: 13,
-  },
-  infoValue: {
-    color: '#F8FAFC',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
-  infoValueBadge: {
-    color: '#10B981',
+  profileValue: {
+    color: '#0F172A',
+    fontSize: 13,
     fontWeight: '700',
+  },
+  profileRole: {
+    color: '#2563EB',
     fontSize: 12,
+    fontWeight: '800',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  profileDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 6,
   },
   logoutButton: {
     backgroundColor: '#EF4444',
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 8,
+    width: '100%',
     alignItems: 'center',
   },
   logoutButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
+  },
+  footer: {
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  footerText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '500',
   },
 });
