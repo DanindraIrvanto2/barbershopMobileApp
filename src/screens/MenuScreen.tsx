@@ -40,7 +40,7 @@ export default function MenuScreen({ navigation }: any) {
             <Image
               source={require('../../assets/logo.png')}
               style={styles.logoImage}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </View>
           <Text style={styles.brandTitle}>Hairdept Barbershop.</Text>
@@ -96,15 +96,16 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#CBD5E1',
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoImage: {
-    width: '100%',
-    height: '100%',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
   brandTitle: {
     fontSize: 15,
