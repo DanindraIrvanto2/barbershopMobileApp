@@ -26,6 +26,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const handleLogin = async () => {
     setErrorMsg('');
+
     const inputEmail = email.trim();
     const inputPassword = password.trim();
 
@@ -35,13 +36,19 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     }
 
     setLoading(true);
+
     try {
       const data = await authService.login(inputEmail, inputPassword);
-      login(data.user || { id: 1, username: inputEmail, email: inputEmail, role: 'admin' });
-      navigation.replace('Orders');
+
+      login(data.user);
+      navigation.replace('Home');
     } catch (err: any) {
       console.log('Login attempt error:', err?.message);
-      const msg = err.response?.data?.error || 'Email/username atau password salah';
+
+      const msg =
+        err.response?.data?.error ||
+        'Email/username atau password salah';
+
       setErrorMsg(msg);
     } finally {
       setLoading(false);
@@ -176,30 +183,36 @@ const styles = StyleSheet.create({
   brandHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: Platform.OS === 'ios' ? 8 : 16,
+    gap: 12,
+    marginTop: Platform.OS === 'ios' ? 12 : 20,
+    marginBottom: 4,
   },
   logoWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 1.5,
     borderColor: '#CBD5E1',
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   logoImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   brandTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   formContainer: {
     marginVertical: 'auto',
