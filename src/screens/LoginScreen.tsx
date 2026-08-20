@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  ImageBackground,
   ScrollView,
 } from 'react-native';
 import type { LoginScreenProps } from '../types/navigation';
@@ -50,138 +49,120 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/login-bg.jpg')}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      {/* Dark Overlay untuk kontras visual dan keterbacaan */}
-      <View style={styles.overlay}>
-        <SafeAreaView style={styles.container}>
-          <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-          <KeyboardAvoidingView
-            style={styles.keyboardContainer}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          >
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Brand Header */}
+          <View style={styles.brandHeader}>
+            <View style={styles.logoWrapper}>
+              <Image
+                source={require('../../assets/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.brandTitle}>Hairdept Barbershop.</Text>
+          </View>
+
+          {/* Form Content */}
+          <View style={styles.formContainer}>
+            {/* Heading */}
+            <View style={styles.headingBox}>
+              <Text style={styles.mainTitle}>Log in to your account</Text>
+              <Text style={styles.subTitle}>
+                Enter your email or username and password below to log in
+              </Text>
+            </View>
+
+            {/* Error Message Box */}
+            {errorMsg ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorIcon}>⚠️</Text>
+                <Text style={styles.errorText}>{errorMsg}</Text>
+              </View>
+            ) : null}
+
+            {/* Input Fields */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email / Username</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Email"
+                placeholderTextColor="#94A3B8"
+                value={email}
+                onChangeText={(val) => {
+                  setEmail(val);
+                  if (errorMsg) setErrorMsg('');
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Password"
+                placeholderTextColor="#94A3B8"
+                value={password}
+                onChangeText={(val) => {
+                  setPassword(val);
+                  if (errorMsg) setErrorMsg('');
+                }}
+                secureTextEntry
+              />
+            </View>
+
+            {/* Remember Me Toggle */}
+            <TouchableOpacity
+              style={styles.rememberMeRow}
+              onPress={() => setRememberMe(!rememberMe)}
+              activeOpacity={0.7}
             >
-              {/* Brand Header */}
-              <View style={styles.brandHeader}>
-                <View style={styles.logoWrapper}>
-                  <Image
-                    source={require('../../assets/logo.png')}
-                    style={styles.logoImage}
-                    resizeMode="contain"
-                  />
-                </View>
-                <Text style={styles.brandTitle}>Hairdept Barbershop.</Text>
+              <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
+                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
               </View>
+              <Text style={styles.rememberMeText}>Remember me</Text>
+            </TouchableOpacity>
 
-              {/* Form Content */}
-              <View style={styles.formContainer}>
-                {/* Heading */}
-                <View style={styles.headingBox}>
-                  <Text style={styles.mainTitle}>Log in to your account</Text>
-                  <Text style={styles.subTitle}>
-                    Enter your email or username and password below to log in
-                  </Text>
-                </View>
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              onPress={handleLogin}
+              activeOpacity={0.85}
+              disabled={loading}
+            >
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Logging in...' : 'Log in'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-                {/* Error Message Box */}
-                {errorMsg ? (
-                  <View style={styles.errorBanner}>
-                    <Text style={styles.errorIcon}>⚠️</Text>
-                    <Text style={styles.errorText}>{errorMsg}</Text>
-                  </View>
-                ) : null}
-
-                {/* Input Email / Username */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Email / Username</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Email"
-                    placeholderTextColor="rgba(255, 255, 255, 0.45)"
-                    value={email}
-                    onChangeText={(val) => {
-                      setEmail(val);
-                      if (errorMsg) setErrorMsg('');
-                    }}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-
-                {/* Input Password */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Password</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Password"
-                    placeholderTextColor="rgba(255, 255, 255, 0.45)"
-                    value={password}
-                    onChangeText={(val) => {
-                      setPassword(val);
-                      if (errorMsg) setErrorMsg('');
-                    }}
-                    secureTextEntry
-                  />
-                </View>
-
-                {/* Remember Me Toggle */}
-                <TouchableOpacity
-                  style={styles.rememberMeRow}
-                  onPress={() => setRememberMe(!rememberMe)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
-                    {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                  <Text style={styles.rememberMeText}>Remember me</Text>
-                </TouchableOpacity>
-
-                {/* Submit Button */}
-                <TouchableOpacity
-                  style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-                  onPress={handleLogin}
-                  activeOpacity={0.85}
-                  disabled={loading}
-                >
-                  <Text style={styles.submitButtonText}>
-                    {loading ? 'Logging in...' : 'Log in'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Footer Copyright */}
-              <View style={styles.footer}>
-                <Text style={styles.footerText}>
-                  © 2026 Hairdept Barbershop Management POS
-                </Text>
-              </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </View>
-    </ImageBackground>
+          {/* Footer Copyright */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              © 2026 Hairdept Barbershop Management POS
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.58)', // Overlay lembut agar background barbershop terlihat jelas
-  },
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   keyboardContainer: {
     flex: 1,
@@ -195,29 +176,29 @@ const styles = StyleSheet.create({
   brandHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginTop: Platform.OS === 'ios' ? 10 : 20,
+    gap: 10,
+    marginTop: Platform.OS === 'ios' ? 8 : 16,
   },
   logoWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoImage: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
   brandTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F172A',
     letterSpacing: -0.3,
   },
   formContainer: {
@@ -229,23 +210,23 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   mainTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: -0.8,
-    marginBottom: 8,
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+    marginBottom: 6,
   },
   subTitle: {
     fontSize: 13,
-    fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '600',
+    color: '#64748B',
     lineHeight: 18,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.3)',
-    borderColor: 'rgba(239, 68, 68, 0.8)',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -257,84 +238,82 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   errorText: {
-    color: '#FECACA',
+    color: '#B91C1C',
     fontSize: 12,
     fontWeight: '700',
     flex: 1,
   },
   inputGroup: {
-    marginBottom: 18,
+    marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
+    color: '#1E293B',
+    marginBottom: 6,
   },
   textInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.28)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#0F172A',
   },
   rememberMeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     marginTop: 2,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    backgroundColor: '#000000',
+    borderColor: '#000000',
   },
   checkmark: {
-    color: '#000000',
-    fontSize: 12,
-    fontWeight: '900',
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
   },
   rememberMeText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#475569',
   },
   submitButton: {
-    backgroundColor: '#0F172A',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 15,
+    backgroundColor: '#000000',
+    paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   submitButtonDisabled: {
     opacity: 0.5,
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   footer: {
     alignItems: 'center',
@@ -342,7 +321,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   footerText: {
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: '#94A3B8',
     fontSize: 11,
     fontWeight: '500',
   },
