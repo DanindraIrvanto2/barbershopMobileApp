@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import type { LoginScreenProps } from '../types/navigation';
 import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/authService';
+import { authService } from '../api/authService';
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const { login } = useAuth();
