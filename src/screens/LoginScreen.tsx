@@ -41,7 +41,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       const data = await authService.login(inputEmail, inputPassword);
 
       login(data.user);
-      navigation.replace('Home');
+      navigation.replace('MainTabs');
     } catch (err: any) {
       console.log('Login attempt error:', err?.message);
 

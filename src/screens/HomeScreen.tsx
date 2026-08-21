@@ -11,8 +11,13 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import type { HomeScreenProps } from '../types/navigation';
+
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types/navigation';
+
 import { useAuth } from '../context/AuthContext';
+
 import {
   getHomeData,
   getOrdersData,
@@ -20,7 +25,12 @@ import {
   getKapsterData,
 } from '../api/homeService';
 
-export default function HomeScreen({ navigation }: HomeScreenProps) {
+type RootNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
+
+export default function HomeScreen() {
+  const navigation = useNavigation<RootNavigationProp>();
+
   const { user, logout } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -40,18 +50,33 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [invoicesRes, ordersRes, customersRes, kapstersRes] =
-        await Promise.allSettled([
-          getHomeData(),
-          getOrdersData(),
-          getCustomerData(),
-          getKapsterData(),
-        ]);
+      const [
+        invoicesRes,
+        ordersRes,
+        customersRes,
+        kapstersRes,
+      ] = await Promise.allSettled([
+        getHomeData(),
+        getOrdersData(),
+        getCustomerData(),
+        getKapsterData(),
+      ]);
 
-      if (invoicesRes.status === 'fulfilled') setInvoices(invoicesRes.value || []);
-      if (ordersRes.status === 'fulfilled') setOrders(ordersRes.value || []);
-      if (customersRes.status === 'fulfilled') setCustomers(customersRes.value || []);
-      if (kapstersRes.status === 'fulfilled') setKapsters(kapstersRes.value || []);
+      if (invoicesRes.status === 'fulfilled') {
+        setInvoices(invoicesRes.value || []);
+      }
+
+      if (ordersRes.status === 'fulfilled') {
+        setOrders(ordersRes.value || []);
+      }
+
+      if (customersRes.status === 'fulfilled') {
+        setCustomers(customersRes.value || []);
+      }
+
+      if (kapstersRes.status === 'fulfilled') {
+        setKapsters(kapstersRes.value || []);
+      }
     } catch (error) {
       console.log('Error fetching dashboard data:', error);
     } finally {
@@ -70,77 +95,153 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   };
 
   const handleLogout = () => {
-    Alert.alert('Konfirmasi Logout', 'Apakah Anda yakin ingin keluar?', [
-      { text: 'Batal', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: () => {
-          logout();
-          navigation.replace('Login');
+    Alert.alert(
+      'Konfirmasi Logout',
+      'Apakah Anda yakin ingin keluar?',
+      [
+        {
+          text: 'Batal',
+          style: 'cancel',
         },
-      },
-    ]);
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => {
+            logout();
+            navigation.replace('Login');
+          },
+        },
+      ]
+    );
   };
 
-  // 1. Perhitungan Metrics Hari Ini
+  // =========================
+  // TODAY DATA
+  // =========================
+
   const todayStr = new Date().toDateString();
 
-  const todayOrders = orders.filter((o) => {
-    const orderDate = new Date(o.createdAt || o.created_at || Date.now()).toDateString();
-    return orderDate === todayStr;
-  });
-  const totalOrdersCount = todayOrders.length > 0 ? todayOrders.length : orders.length;
+  const todayOrders = orders.filter((order) => {
+    const rawDate =
+      order.createdAt ||
+      order.created_at;
 
-  const todayCustomers = customers.filter((c) => {
-    const custDate = new Date(c.createdAt || c.created_at || Date.now()).toDateString();
-    return custDate === todayStr;
+    if (!rawDate) return false;
+
+    return (
+      new Date(rawDate).toDateString() ===
+      todayStr
+    );
   });
-  const totalCustomersCount = todayCustomers.length > 0 ? todayCustomers.length : customers.length;
+
+  const totalOrdersToday =
+    todayOrders.length;
+
+  const todayCustomers = customers.filter(
+    (customer) => {
+      const rawDate =
+        customer.createdAt ||
+        customer.created_at;
+
+      if (!rawDate) return false;
+
+      return (
+        new Date(rawDate).toDateString() ===
+        todayStr
+      );
+    }
+  );
+
+  const totalCustomersToday =
+    todayCustomers.length;
 
   const calculatedRevenue = invoices
-    .filter((inv) => {
-      const isPaid = (inv.status || '').toLowerCase() === 'paid';
-      return isPaid;
+    .filter((invoice) => {
+      const isPaid =
+        (invoice.status || '').toLowerCase() ===
+        'paid';
+
+      if (!isPaid) return false;
+
+      const rawDate =
+        invoice.paidAt ||
+        invoice.paid_at ||
+        invoice.issuedAt ||
+        invoice.issued_at;
+
+      if (!rawDate) return false;
+
+      return (
+        new Date(rawDate).toDateString() ===
+        todayStr
+      );
     })
-    .reduce((acc, curr) => {
-      return acc + (parseFloat(curr.total_amount || curr.totalAmount) || 0);
+    .reduce((total, invoice) => {
+      return (
+        total +
+        (parseFloat(
+          invoice.total_amount ||
+          invoice.totalAmount
+        ) || 0)
+      );
     }, 0);
 
-  const formatCurrency = (val: number) => {
-    return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+  const formatCurrency = (value: number) => {
+    return (
+      'Rp ' +
+      Number(value || 0).toLocaleString('id-ID')
+    );
   };
 
   const getCustomerName = (id: number) => {
-    const cust = customers.find((c) => c.id === id);
-    return cust ? cust.name : `Customer #${id}`;
+    const customer = customers.find(
+      (item) => item.id === id
+    );
+
+    return customer
+      ? customer.name
+      : `Customer #${id}`;
   };
 
   const getKapsterName = (id: number) => {
-    const kap = kapsters.find((k) => k.id === id);
-    return kap ? kap.name : `Kapster #${id}`;
+    const kapster = kapsters.find(
+      (item) => item.id === id
+    );
+
+    return kapster
+      ? kapster.name
+      : `Kapster #${id}`;
   };
 
-  // 3 Card Data Sesuai Screenshot Web
+  // =========================
+  // SUMMARY CARDS
+  // =========================
+
   const summaryCards = [
     {
       id: 'total-orders',
       label: 'TOTAL ORDERS',
-      value: loading ? '0' : String(totalOrdersCount),
+      value: loading
+        ? '0'
+        : String(totalOrdersToday),
       subtext: '↗ % vs last week',
       icon: '🧾',
     },
     {
       id: 'revenue-today',
       label: 'REVENUE (TODAY)',
-      value: loading ? 'Rp 0' : formatCurrency(calculatedRevenue),
+      value: loading
+        ? 'Rp 0'
+        : formatCurrency(calculatedRevenue),
       subtext: '↗ % vs yesterday',
       icon: '💵',
     },
     {
       id: 'new-customers',
       label: 'NEW CUSTOMERS',
-      value: loading ? '0' : String(totalCustomersCount),
+      value: loading
+        ? '0'
+        : String(totalCustomersToday),
       subtext: '→ Same as average',
       icon: '👤',
     },
@@ -148,19 +249,32 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+      />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={
+          styles.scrollContent
+        }
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
         }
       >
-        {/* Top Header Bar */}
+        {/* =========================
+            TOP HEADER
+        ========================= */}
+
         <View style={styles.topHeader}>
           <View style={styles.dateBadge}>
-            <Text style={styles.dateBadgeText}>TODAY, {todayFormatted}</Text>
+            <Text style={styles.dateBadgeText}>
+              TODAY, {todayFormatted}
+            </Text>
           </View>
 
           <TouchableOpacity
@@ -168,98 +282,189 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             onPress={handleLogout}
             activeOpacity={0.8}
           >
-            <Text style={styles.logoutBtnText}>Logout</Text>
+            <Text style={styles.logoutBtnText}>
+              Logout
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Dashboard Title Header */}
+        {/* =========================
+            TITLE
+        ========================= */}
+
         <View style={styles.titleSection}>
-          <Text style={styles.mainTitle}>Dashboard Overview</Text>
+          <Text style={styles.mainTitle}>
+            Dashboard Overview
+          </Text>
+
           <Text style={styles.subTitle}>
             Here's what's happening at Hairdept today.
           </Text>
         </View>
 
-        {/* Section: Metrics Bento Cards (Horizontal Scroll) */}
+        {/* =========================
+            SUMMARY CARDS
+        ========================= */}
+
         <View style={styles.metricsSection}>
           <ScrollView
-            horizontal={true}
+            horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalScroll}
+            contentContainerStyle={
+              styles.horizontalScroll
+            }
           >
             {summaryCards.map((card) => (
-              <View key={card.id} style={styles.metricCard}>
+              <View
+                key={card.id}
+                style={styles.metricCard}
+              >
                 <View style={styles.cardHeaderRow}>
-                  <Text style={styles.cardLabel}>{card.label}</Text>
+                  <Text style={styles.cardLabel}>
+                    {card.label}
+                  </Text>
+
                   <View style={styles.iconBox}>
-                    <Text style={styles.iconText}>{card.icon}</Text>
+                    <Text style={styles.iconText}>
+                      {card.icon}
+                    </Text>
                   </View>
                 </View>
 
                 <View style={styles.cardBody}>
-                  <Text style={styles.metricValue}>{card.value}</Text>
-                  <Text style={styles.metricSubtext}>{card.subtext}</Text>
+                  <Text style={styles.metricValue}>
+                    {card.value}
+                  </Text>
+
+                  <Text style={styles.metricSubtext}>
+                    {card.subtext}
+                  </Text>
                 </View>
               </View>
             ))}
           </ScrollView>
         </View>
 
-        {/* Section: Up Next / Recent Orders (Vertical List) */}
+        {/* =========================
+            UP NEXT
+        ========================= */}
+
         <View style={styles.upNextSection}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Up Next</Text>
+            <Text style={styles.sectionTitle}>
+              Up Next
+            </Text>
+
             <TouchableOpacity activeOpacity={0.7}>
-              <Text style={styles.viewAllText}>View All</Text>
+              <Text style={styles.viewAllText}>
+                View All
+              </Text>
             </TouchableOpacity>
           </View>
 
           {loading ? (
-            <ActivityIndicator size="small" color="#0F172A" style={styles.loadingIndicator} />
+            <ActivityIndicator
+              size="small"
+              color="#0F172A"
+              style={styles.loadingIndicator}
+            />
           ) : orders.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>No upcoming appointments</Text>
+              <Text style={styles.emptyText}>
+                No upcoming appointments
+              </Text>
             </View>
           ) : (
             <View style={styles.ordersListVertical}>
-              {orders.slice(0, 5).map((ord, idx) => {
-                const customerName =
-                  ord.customer_name ||
-                  ord.customerName ||
-                  getCustomerName(ord.customer_id || ord.customerId);
-                const serviceName = ord.notes || 'Haircut & Styling';
-                const kapsterName =
-                  ord.kapster_name ||
-                  ord.kapsterName ||
-                  getKapsterName(ord.kapster_id || ord.kapsterId);
-                const time = ord.checkin_time || ord.checkInTime || '10:30';
-                const initial = customerName.charAt(0).toUpperCase();
+              {orders
+                .slice(0, 5)
+                .map((order, index) => {
+                  const customerName =
+                    order.customer_name ||
+                    order.customerName ||
+                    getCustomerName(
+                      order.customer_id ||
+                      order.customerId
+                    );
 
-                return (
-                  <View key={ord.id || idx} style={styles.orderCard}>
-                    {/* Left Side: Avatar & Info */}
-                    <View style={styles.orderLeft}>
-                      <View style={styles.avatarBox}>
-                        <Text style={styles.avatarText}>{initial}</Text>
+                  const serviceName =
+                    order.notes ||
+                    'Haircut & Styling';
+
+                  const kapsterName =
+                    order.kapster_name ||
+                    order.kapsterName ||
+                    getKapsterName(
+                      order.kapster_id ||
+                      order.kapsterId
+                    );
+
+                  const time =
+                    order.checkin_time ||
+                    order.checkInTime ||
+                    '10:30';
+
+                  const initial =
+                    customerName
+                      .charAt(0)
+                      .toUpperCase();
+
+                  return (
+                    <View
+                      key={
+                        order.id || index
+                      }
+                      style={styles.orderCard}
+                    >
+                      <View style={styles.orderLeft}>
+                        <View style={styles.avatarBox}>
+                          <Text
+                            style={styles.avatarText}
+                          >
+                            {initial}
+                          </Text>
+                        </View>
+
+                        <View style={styles.orderInfo}>
+                          <Text
+                            style={styles.customerName}
+                          >
+                            {customerName}
+                          </Text>
+
+                          <Text
+                            style={styles.serviceText}
+                            numberOfLines={1}
+                          >
+                            {serviceName}
+                          </Text>
+                        </View>
                       </View>
-                      <View style={styles.orderInfo}>
-                        <Text style={styles.customerName}>{customerName}</Text>
-                        <Text style={styles.serviceText} numberOfLines={1}>
-                          {serviceName}
+
+                      <View style={styles.orderRight}>
+                        <Text
+                          style={styles.orderTimeText}
+                        >
+                          {time}
                         </Text>
-                      </View>
-                    </View>
 
-                    {/* Right Side: Time & Kapster Pill */}
-                    <View style={styles.orderRight}>
-                      <Text style={styles.orderTimeText}>{time}</Text>
-                      <View style={styles.kapsterBadge}>
-                        <Text style={styles.kapsterBadgeText}>w/ {kapsterName}</Text>
+                        <View
+                          style={
+                            styles.kapsterBadge
+                          }
+                        >
+                          <Text
+                            style={
+                              styles.kapsterBadgeText
+                            }
+                          >
+                            w/ {kapsterName}
+                          </Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                );
-              })}
+                  );
+                })}
             </View>
           )}
         </View>
@@ -273,9 +478,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAFAFA',
   },
+
   scrollContent: {
     paddingVertical: 18,
   },
+
   topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -283,6 +490,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 16,
   },
+
   dateBadge: {
     backgroundColor: '#EEEEEE',
     borderWidth: 1,
@@ -291,12 +499,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
   },
+
   dateBadgeText: {
     fontSize: 11,
     fontWeight: '800',
     color: '#475569',
     letterSpacing: 0.8,
   },
+
   logoutBtn: {
     backgroundColor: '#FEE2E2',
     borderWidth: 1,
@@ -305,34 +515,41 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
   },
+
   logoutBtnText: {
     color: '#DC2626',
     fontWeight: '700',
     fontSize: 12,
   },
+
   titleSection: {
     paddingHorizontal: 20,
     marginBottom: 20,
   },
+
   mainTitle: {
     fontSize: 28,
     fontWeight: '900',
     color: '#1A1C1C',
     letterSpacing: -0.6,
   },
+
   subTitle: {
     fontSize: 13,
     fontWeight: '500',
     color: '#64748B',
     marginTop: 4,
   },
+
   metricsSection: {
     marginBottom: 28,
   },
+
   horizontalScroll: {
     paddingHorizontal: 20,
     gap: 14,
   },
+
   metricCard: {
     width: 220,
     height: 140,
@@ -342,17 +559,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E2E2',
     justifyContent: 'space-between',
+
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
     shadowOpacity: 0.04,
     shadowRadius: 3,
+
     elevation: 2,
   },
+
   cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+
   cardLabel: {
     fontSize: 10,
     fontWeight: '900',
@@ -361,6 +585,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: 6,
   },
+
   iconBox: {
     width: 36,
     height: 36,
@@ -371,12 +596,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   iconText: {
     fontSize: 16,
   },
+
   cardBody: {
     marginTop: 2,
   },
+
   metricValue: {
     fontSize: 26,
     fontWeight: '900',
@@ -384,34 +612,41 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     letterSpacing: -0.5,
   },
+
   metricSubtext: {
     fontSize: 12,
     fontWeight: '600',
     color: '#64748B',
   },
+
   upNextSection: {
     paddingHorizontal: 20,
   },
+
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 14,
   },
+
   sectionTitle: {
     fontSize: 18,
     fontWeight: '900',
     color: '#1A1C1C',
     letterSpacing: -0.4,
   },
+
   viewAllText: {
     fontSize: 12,
     fontWeight: '800',
     color: '#000000',
   },
+
   loadingIndicator: {
     paddingVertical: 30,
   },
+
   emptyCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
@@ -421,14 +656,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   emptyText: {
     color: '#94A3B8',
     fontSize: 13,
     fontWeight: '600',
   },
+
   ordersListVertical: {
     gap: 10,
   },
+
   orderCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -438,18 +676,25 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: '#E2E2E2',
+
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
     shadowOpacity: 0.03,
     shadowRadius: 3,
+
     elevation: 1,
   },
+
   orderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     flex: 1,
   },
+
   avatarBox: {
     width: 40,
     height: 40,
@@ -460,34 +705,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
   avatarText: {
     fontSize: 14,
     fontWeight: '800',
     color: '#1E293B',
   },
+
   orderInfo: {
     flex: 1,
   },
+
   customerName: {
     fontSize: 14,
     fontWeight: '800',
     color: '#1A1C1C',
     marginBottom: 2,
   },
+
   serviceText: {
     fontSize: 11,
     fontWeight: '500',
     color: '#64748B',
   },
+
   orderRight: {
     alignItems: 'flex-end',
   },
+
   orderTimeText: {
     fontSize: 12,
     fontWeight: '800',
     color: '#1A1C1C',
     marginBottom: 4,
   },
+
   kapsterBadge: {
     backgroundColor: '#EEEEEE',
     borderWidth: 1,
@@ -496,6 +748,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 6,
   },
+
   kapsterBadgeText: {
     fontSize: 10,
     fontWeight: '700',
