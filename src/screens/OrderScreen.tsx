@@ -15,6 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Print from 'expo-print';
 import { orderService, type Order } from '../api/orderService';
 import { getCustomerData, getKapsterData } from '../api/homeService';
 
@@ -55,6 +56,7 @@ export default function OrderScreen() {
 
   // Edit / View Modal states
   const [viewOrderModal, setViewOrderModal] = useState<Order | null>(null);
+  const [selectedInvoiceModal, setSelectedInvoiceModal] = useState<Order | null>(null);
   const [statusForm, setStatusForm] = useState({
     serviceStatus: 'waiting',
     paymentStatus: 'unpaid',
@@ -338,6 +340,176 @@ export default function OrderScreen() {
     }
   };
 
+  // Print Receipt Handler
+  const handlePrintReceipt = async (order: Order) => {
+    const cust = getCustomer(order.customerId);
+    const kap = getKapster(order.kapsterId);
+    const dateStr = new Date(order.createdAt || Date.now()).toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const timeStr = order.checkInTime || '10:30';
+    const totalDue = parseFloat(String(order.totalPrice || 35000));
+    const items =
+      order.services && order.services.length > 0
+        ? order.services
+        : [{ name: order.notes || 'Haircut & Styling', price: totalDue }];
+
+    const itemsHtml = items
+      .map(
+        (it) => `
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
+        <span style="font-weight: 600; color: #1e293b;">${it.name}</span>
+        <span style="font-weight: 700; color: #0f172a;">${formatCurrency(it.price)}</span>
+      </div>
+    `
+      )
+      .join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              color: #0f172a;
+              padding: 24px;
+              margin: 0;
+              max-width: 320px;
+              margin: auto;
+            }
+            .header {
+              text-align: center;
+              padding-bottom: 12px;
+              border-bottom: 1px dashed #94a3b8;
+              margin-bottom: 12px;
+            }
+            .brand-title {
+              font-size: 16px;
+              font-weight: 900;
+              letter-spacing: 0.5px;
+              margin: 4px 0 2px 0;
+            }
+            .address {
+              font-size: 11px;
+              color: #64748b;
+              margin: 2px 0;
+            }
+            .meta-row {
+              display: flex;
+              justify-content: space-between;
+              font-size: 12px;
+              margin-bottom: 5px;
+            }
+            .meta-label {
+              color: #64748b;
+              font-weight: 600;
+            }
+            .meta-value {
+              font-weight: 800;
+              color: #0f172a;
+            }
+            .divider {
+              border-bottom: 1px dashed #94a3b8;
+              margin: 12px 0;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-size: 15px;
+              font-weight: 900;
+              margin-top: 6px;
+            }
+            .status-badge {
+              display: inline-block;
+              padding: 3px 8px;
+              border-radius: 4px;
+              font-size: 11px;
+              font-weight: 800;
+              background-color: ${order.paymentStatus === 'paid' ? '#dcfce7' : '#fef3c7'};
+              color: ${order.paymentStatus === 'paid' ? '#16a34a' : '#d97706'};
+            }
+            .footer {
+              text-align: center;
+              margin-top: 16px;
+              font-size: 11px;
+              color: #64748b;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div style="font-size: 24px; margin-bottom: 4px;">✂️</div>
+            <div class="brand-title">HAIRDEPT BARBERSHOP</div>
+            <div class="address">Jl. Grand Sutra Raya, Tangerang</div>
+            <div class="address">Telp: 0812-3456-7890</div>
+          </div>
+
+          <div class="meta-row">
+            <span class="meta-label">No. Invoice:</span>
+            <span class="meta-value">#INV-${String(order.id).padStart(4, '0')}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">No. Order:</span>
+            <span class="meta-value">#ORD-${String(order.id).padStart(3, '0')}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Tanggal:</span>
+            <span class="meta-value">${dateStr} • ${timeStr}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Customer:</span>
+            <span class="meta-value">${cust.name} (${cust.phone || '-'})</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Kapster:</span>
+            <span class="meta-value">${kap.name}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">
+            RINCIAN LAYANAN & PRODUK:
+          </div>
+          ${itemsHtml}
+
+          <div class="divider"></div>
+
+          <div class="meta-row" style="margin-bottom: 8px;">
+            <span class="meta-label">Metode Bayar:</span>
+            <span class="meta-value">Cash (Tunai)</span>
+          </div>
+          <div class="total-row">
+            <span>TOTAL TAGIHAN:</span>
+            <span style="color: #0f172a;">${formatCurrency(totalDue)}</span>
+          </div>
+          <div class="meta-row" style="margin-top: 8px; align-items: center;">
+            <span class="meta-label">Status:</span>
+            <span class="status-badge">${(order.paymentStatus || 'UNPAID').toUpperCase()}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="footer">
+            <div style="font-weight: 800; color: #1e293b; margin-bottom: 2px;">Terima Kasih Atas Kunjungan Anda!</div>
+            <div>See you next time at Hairdept Barbershop.</div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    try {
+      await Print.printAsync({ html: htmlContent });
+    } catch (err) {
+      console.log('Error printing receipt:', err);
+      Alert.alert('Gagal Print', 'Tidak dapat memproses print struk.');
+    }
+  };
+
   // Delete Order (D)
   const handleDeleteOrder = () => {
     if (!viewOrderModal) return;
@@ -616,7 +788,7 @@ export default function OrderScreen() {
                         </View>
                       </View>
 
-                      {/* Action Buttons: View & Delete */}
+                      {/* Action Buttons: View, Invoice & Delete */}
                       <View style={styles.actionButtonsRow}>
                         <TouchableOpacity
                           style={styles.viewActionBtn}
@@ -627,11 +799,19 @@ export default function OrderScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
+                          style={styles.invoiceActionBtn}
+                          onPress={() => setSelectedInvoiceModal(ord)}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons name="receipt-outline" size={17} color="#1E293B" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
                           style={styles.deleteActionBtn}
                           onPress={() => handleQuickDelete(ord)}
                           activeOpacity={0.7}
                         >
-                          <Ionicons name="trash-outline" size={18} color="#94A3B8" />
+                          <Ionicons name="trash-outline" size={17} color="#94A3B8" />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -1345,6 +1525,227 @@ export default function OrderScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* ======================================================== */}
+      {/* 7. MODAL: INVOICE & RECEIPT PREVIEW */}
+      {/* ======================================================== */}
+      <Modal
+        visible={!!selectedInvoiceModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setSelectedInvoiceModal(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, styles.receiptModalCard]}>
+            {/* Close Button Header */}
+            <View style={styles.receiptTopBar}>
+              <Text style={styles.receiptTopTitle}>Invoice & Receipt</Text>
+              <TouchableOpacity
+                onPress={() => setSelectedInvoiceModal(null)}
+                style={styles.modalCloseBtn}
+              >
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={styles.modalScroll}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Receipt Paper Card */}
+              <View style={styles.receiptPaper}>
+                {/* Header Struk */}
+                <View style={styles.receiptHeader}>
+                  <View style={styles.receiptLogoCircle}>
+                    <Ionicons name="cut" size={24} color="#0F172A" />
+                  </View>
+                  <Text style={styles.receiptBrandTitle}>
+                    HAIRDEPT BARBERSHOP
+                  </Text>
+                  <Text style={styles.receiptAddressText}>
+                    Jl. Grand Sutra Raya, Tangerang
+                  </Text>
+                  <Text style={styles.receiptAddressText}>
+                    Telp: 0812-3456-7890
+                  </Text>
+                </View>
+
+                {/* Dashed Line */}
+                <View style={styles.dashedLine} />
+
+                {/* Meta Transaksi */}
+                <View style={styles.receiptMetaSection}>
+                  <View style={styles.receiptMetaRow}>
+                    <Text style={styles.receiptMetaLabel}>No. Invoice:</Text>
+                    <Text style={styles.receiptMetaValue}>
+                      #INV-
+                      {String(selectedInvoiceModal?.id || 0).padStart(4, '0')}
+                    </Text>
+                  </View>
+
+                  <View style={styles.receiptMetaRow}>
+                    <Text style={styles.receiptMetaLabel}>No. Order:</Text>
+                    <Text style={styles.receiptMetaValue}>
+                      #ORD-
+                      {String(selectedInvoiceModal?.id || 0).padStart(3, '0')}
+                    </Text>
+                  </View>
+
+                  <View style={styles.receiptMetaRow}>
+                    <Text style={styles.receiptMetaLabel}>Tanggal & Jam:</Text>
+                    <Text style={styles.receiptMetaValue}>
+                      {new Date(
+                        selectedInvoiceModal?.createdAt || Date.now()
+                      ).toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                      })}{' '}
+                      • {selectedInvoiceModal?.checkInTime || '10:30'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.receiptMetaRow}>
+                    <Text style={styles.receiptMetaLabel}>Customer:</Text>
+                    <Text style={styles.receiptMetaValue}>
+                      {
+                        getCustomer(selectedInvoiceModal?.customerId || 0)
+                          .name
+                      }{' '}
+                      (
+                      {
+                        getCustomer(selectedInvoiceModal?.customerId || 0)
+                          .phone
+                      }
+                      )
+                    </Text>
+                  </View>
+
+                  <View style={styles.receiptMetaRow}>
+                    <Text style={styles.receiptMetaLabel}>Kapster:</Text>
+                    <Text style={styles.receiptMetaValue}>
+                      {getKapster(selectedInvoiceModal?.kapsterId || 0).name}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Dashed Line */}
+                <View style={styles.dashedLine} />
+
+                {/* Itemized Services & Products */}
+                <View style={styles.receiptItemsSection}>
+                  <Text style={styles.receiptSectionHeader}>
+                    RINCIAN LAYANAN & PRODUK:
+                  </Text>
+                  {selectedInvoiceModal?.services &&
+                  selectedInvoiceModal.services.length > 0 ? (
+                    selectedInvoiceModal.services.map((item, idx) => (
+                      <View key={idx} style={styles.receiptItemRow}>
+                        <Text style={styles.receiptItemName}>{item.name}</Text>
+                        <Text style={styles.receiptItemPrice}>
+                          {formatCurrency(item.price)}
+                        </Text>
+                      </View>
+                    ))
+                  ) : (
+                    <View style={styles.receiptItemRow}>
+                      <Text style={styles.receiptItemName}>
+                        {selectedInvoiceModal?.notes || 'Haircut & Styling'}
+                      </Text>
+                      <Text style={styles.receiptItemPrice}>
+                        {formatCurrency(
+                          selectedInvoiceModal?.totalPrice || 35000
+                        )}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Dashed Line */}
+                <View style={styles.dashedLine} />
+
+                {/* Total & Payment Summary */}
+                <View style={styles.receiptTotalSection}>
+                  <View style={styles.receiptTotalRow}>
+                    <Text style={styles.receiptTotalLabel}>TOTAL TAGIHAN</Text>
+                    <Text style={styles.receiptTotalAmount}>
+                      {formatCurrency(
+                        selectedInvoiceModal?.totalPrice || 35000
+                      )}
+                    </Text>
+                  </View>
+
+                  <View style={styles.receiptStatusRow}>
+                    <Text style={styles.receiptStatusLabel}>
+                      Status Pembayaran:
+                    </Text>
+                    <View
+                      style={[
+                        styles.badge,
+                        (
+                          selectedInvoiceModal?.paymentStatus || 'unpaid'
+                        ).toLowerCase() === 'paid'
+                          ? styles.badgePaid
+                          : styles.badgeUnpaid,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.badgeText,
+                          (
+                            selectedInvoiceModal?.paymentStatus || 'unpaid'
+                          ).toLowerCase() === 'paid'
+                            ? styles.badgeTextPaid
+                            : styles.badgeTextUnpaid,
+                        ]}
+                      >
+                        {(
+                          selectedInvoiceModal?.paymentStatus || 'unpaid'
+                        ).toUpperCase()}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Dashed Line */}
+                <View style={styles.dashedLine} />
+
+                {/* Thank You Note */}
+                <View style={styles.receiptFooter}>
+                  <Text style={styles.receiptThankYou}>
+                    Terima Kasih Atas Kunjungan Anda!
+                  </Text>
+                  <Text style={styles.receiptSubThankYou}>
+                    Harap simpan struk ini sebagai bukti pembayaran yang sah.
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Bottom Modal Actions (Close & Print Receipt) */}
+            <View style={styles.updateModalActions}>
+              <TouchableOpacity
+                style={styles.cancelActionBtn}
+                onPress={() => setSelectedInvoiceModal(null)}
+              >
+                <Text style={styles.cancelActionBtnText}>Close</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.printReceiptBtn}
+                onPress={() =>
+                  selectedInvoiceModal &&
+                  handlePrintReceipt(selectedInvoiceModal)
+                }
+                activeOpacity={0.85}
+              >
+                <Ionicons name="print-outline" size={17} color="#FFFFFF" />
+                <Text style={styles.printReceiptBtnText}>Print Receipt</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1629,6 +2030,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
   },
+  invoiceActionBtn: {
+    padding: 5,
+    borderRadius: 6,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   deleteActionBtn: {
     padding: 5,
     borderRadius: 6,
@@ -1722,7 +2132,8 @@ const styles = StyleSheet.create({
   },
   modalScroll: {
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingTop: 14,
+    paddingBottom: 24,
   },
   formGroup: {
     marginBottom: 16,
@@ -1858,7 +2269,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 8,
     gap: 6,
-    maxHeight: 180,
   },
   serviceRow: {
     flexDirection: 'row',
@@ -2317,6 +2727,171 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   markAsPaidText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+
+  // Receipt / Invoice Preview Styles
+  receiptModalCard: {
+    maxHeight: '92%',
+  },
+  receiptTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  receiptTopTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  receiptPaper: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  receiptHeader: {
+    alignItems: 'center',
+    paddingBottom: 12,
+  },
+  receiptLogoCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  receiptBrandTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: 0.5,
+  },
+  receiptAddressText: {
+    fontSize: 10.5,
+    color: '#64748B',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  dashedLine: {
+    borderWidth: 0.8,
+    borderColor: '#CBD5E1',
+    borderStyle: 'dashed',
+    marginVertical: 12,
+  },
+  receiptMetaSection: {
+    gap: 6,
+  },
+  receiptMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  receiptMetaLabel: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  receiptMetaValue: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  receiptItemsSection: {
+    gap: 6,
+  },
+  receiptSectionHeader: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.6,
+    marginBottom: 4,
+  },
+  receiptItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  receiptItemName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  receiptItemPrice: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  receiptTotalSection: {
+    gap: 8,
+  },
+  receiptTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  receiptTotalLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: 0.4,
+  },
+  receiptTotalAmount: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  receiptStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  receiptStatusLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  receiptFooter: {
+    alignItems: 'center',
+    paddingTop: 4,
+    gap: 4,
+  },
+  receiptThankYou: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#1E293B',
+    textAlign: 'center',
+  },
+  receiptSubThankYou: {
+    fontSize: 9.5,
+    color: '#94A3B8',
+    textAlign: 'center',
+  },
+  printReceiptBtn: {
+    flex: 2,
+    backgroundColor: '#000000',
+    paddingVertical: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  printReceiptBtnText: {
     color: '#FFFFFF',
     fontWeight: '800',
     fontSize: 13,
