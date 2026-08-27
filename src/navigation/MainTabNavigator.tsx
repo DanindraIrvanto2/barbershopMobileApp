@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from '../screens/HomeScreen';
 import OrderScreen from '../screens/OrderScreen';
+import CustomerScreen from '../screens/CustomerScreen';
 import type { MainTabParamList } from '../types/navigation';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -69,6 +70,37 @@ export default function MainTabNavigator() {
                 ]}
               >
                 ORDERS
+              </Text>
+              <View
+                style={[
+                  styles.activeDot,
+                  { backgroundColor: focused ? '#000000' : 'transparent' },
+                ]}
+              />
+            </View>
+          ),
+        }}
+      />
+
+      {/* CUSTOMERS TAB */}
+      <Tab.Screen
+        name="Customer"
+        component={CustomerScreen}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <View style={styles.tabItem}>
+              <Ionicons
+                name={focused ? 'people' : 'people-outline'}
+                size={22}
+                color={focused ? '#000000' : '#8E8E93'}
+              />
+              <Text
+                style={[
+                  styles.tabLabel,
+                  { color: focused ? '#000000' : '#8E8E93' },
+                ]}
+              >
+                CUSTOMERS
               </Text>
               <View
                 style={[

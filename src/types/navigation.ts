@@ -9,6 +9,7 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Order: undefined;
+  Customer: undefined;
 };
 
 export type LoginScreenProps = NativeStackScreenProps<
@@ -24,6 +25,11 @@ export type HomeScreenProps = BottomTabScreenProps<
 export type OrdersScreenProps = BottomTabScreenProps<
   MainTabParamList,
   'Order'
+>;
+
+export type CustomerScreenProps = BottomTabScreenProps<
+  MainTabParamList,
+  'Customer'
 >;
 
 // Fallback compatibility types
